@@ -1,17 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/templates/cheats.txt.html</title>
+<meta name="Generator" content="Vim/8.0">
+<meta name="plugin-version" content="vim7.4_v2">
+<meta name="syntax" content="none">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,prevent_copy=">
+<meta name="colorscheme" content="none">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+-->
+</style>
+
+<script type='text/javascript'>
+<!--
+
+-->
+</script>
+</head>
+<body>
+<pre id='vimCodeElement'>
 
 ========== FFTNum ==========
 
-#define FOR(i, a, b) for (int i = (a); i < (b); ++i)
+#define FOR(i, a, b) for (int i = (a); i &lt; (b); ++i)
 #define sz(a) int((a).size())
 typedef long long ll;
-typedef vector<int> vi;
-const int MOD = 119 << 23 | 1;
-const int FFTMOD = 119 << 23 | 1;
-inline void addmod(int& a, int val, int p = MOD) {if ((a = (a + val)) >= p) a -= p;}
+typedef vector&lt;int&gt; vi;
+const int MOD = 119 &lt;&lt; 23 | 1;
+const int FFTMOD = 119 &lt;&lt; 23 | 1;
+inline void addmod(int&amp; a, int val, int p = MOD) {if ((a = (a + val)) &gt;= p) a -= p;}
 inline int mult(int a, int b, int p = MOD) {return (ll) a * b % p;}
 
 struct NTT {
-    static const int MAXF = 1 << 20;
+    static const int MAXF = 1 &lt;&lt; 20;
     int pr;
     int rts[MAXF + 1];
     int bitrev[MAXF];
@@ -22,100 +48,100 @@ struct NTT {
         int res = a, tmp = a;
         k--;
         while (k) {
-            if (k & 1) {
+            if (k &amp; 1) {
                 res = (long long) res * tmp % p;
             }
             tmp = (long long) tmp * tmp % p;
-            k >>= 1;
+            k &gt;&gt;= 1;
         }
         return res;
     }
     void init(int pr, int pw) {
-        this->pr = pr;
-        int k = 0; while ((1 << k) < MAXF) k++;
+        this-&gt;pr = pr;
+        int k = 0; while ((1 &lt;&lt; k) &lt; MAXF) k++;
         bitrev[0] = 0;
-        for (int i = 1; i < MAXF; i++) {
-            bitrev[i] = bitrev[i >> 1] >> 1 | ((i & 1) << k - 1);
+        for (int i = 1; i &lt; MAXF; i++) {
+            bitrev[i] = bitrev[i &gt;&gt; 1] &gt;&gt; 1 | ((i &amp; 1) &lt;&lt; k - 1);
         }
         pw = fpow(pw, (pr - 1) / MAXF, pr);
         rts[0] = 1;
-        for (int i = 1; i <= MAXF; i++) {
+        for (int i = 1; i &lt;= MAXF; i++) {
             rts[i] = (long long) rts[i - 1] * pw % pr;
         }
-        for (int i = 1; i <= MAXF; i <<= 1) {
+        for (int i = 1; i &lt;= MAXF; i &lt;&lt;= 1) {
             iv[i] = fpow(i, pr - 2, pr);
         }
     }
     void dft(int a[], int n, int sign) {
-        int d = 0; while ((1 << d) * n != MAXF) d++;
-        for (int i = 0; i < n; i++) {
-            if (i < (bitrev[i] >> d)) {
-                swap(a[i], a[bitrev[i] >> d]);
+        int d = 0; while ((1 &lt;&lt; d) * n != MAXF) d++;
+        for (int i = 0; i &lt; n; i++) {
+            if (i &lt; (bitrev[i] &gt;&gt; d)) {
+                swap(a[i], a[bitrev[i] &gt;&gt; d]);
             }
         }
-        for (int len = 2; len <= n; len <<= 1) {
+        for (int len = 2; len &lt;= n; len &lt;&lt;= 1) {
             int delta = MAXF / len * sign;
-            for (int i = 0; i < n; i += len) {
-                int *w = sign > 0 ? rts : rts + MAXF;
-                for (int k = 0; k + k < len; k++) {
-                    int &a1 = a[i + k + (len >> 1)], &a2 = a[i + k];
+            for (int i = 0; i &lt; n; i += len) {
+                int *w = sign &gt; 0 ? rts : rts + MAXF;
+                for (int k = 0; k + k &lt; len; k++) {
+                    int &amp;a1 = a[i + k + (len &gt;&gt; 1)], &amp;a2 = a[i + k];
                     int t = (long long) *w * a1 % pr;
                     a1 = a2 - t;
                     a2 = a2 + t;
-                    a1 += a1 < 0 ? pr : 0;
-                    a2 -= a2 >= pr ? pr : 0;
+                    a1 += a1 &lt; 0 ? pr : 0;
+                    a2 -= a2 &gt;= pr ? pr : 0;
                     w += delta;
                 }
             }
         }
-        if (sign < 0) {
+        if (sign &lt; 0) {
             int in = iv[n];
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i &lt; n; i++) {
                 a[i] = (long long) a[i] * in % pr;
             }
         }
     }
     void multiply(int a[], int b[], int na, int nb, int c[]) {
         static int fa[MAXF], fb[MAXF];
-        int n = na + nb - 1; while (n != (n & -n)) n += n & -n;
-        for (int i = 0; i < n; i++) fa[i] = fb[i] = 0;
-        for (int i = 0; i < na; i++) fa[i] = a[i];
-        for (int i = 0; i < nb; i++) fb[i] = b[i];
+        int n = na + nb - 1; while (n != (n &amp; -n)) n += n &amp; -n;
+        for (int i = 0; i &lt; n; i++) fa[i] = fb[i] = 0;
+        for (int i = 0; i &lt; na; i++) fa[i] = a[i];
+        for (int i = 0; i &lt; nb; i++) fb[i] = b[i];
         dft(fa, n, 1), dft(fb, n, 1);
-        for (int i = 0; i < n; i++) fa[i] = (long long) fa[i] * fb[i] % pr;
+        for (int i = 0; i &lt; n; i++) fa[i] = (long long) fa[i] * fb[i] % pr;
         dft(fa, n, -1);
-        for (int i = 0; i < n; i++) c[i] = fa[i];
+        for (int i = 0; i &lt; n; i++) c[i] = fa[i];
     }
-    vector<int> multiply(vector<int> a, vector<int> b) {
+    vector&lt;int&gt; multiply(vector&lt;int&gt; a, vector&lt;int&gt; b) {
         static int fa[MAXF], fb[MAXF], fc[MAXF];
         int na = a.size(), nb = b.size();
-        for (int i = 0; i < na; i++) fa[i] = a[i];
-        for (int i = 0; i < nb; i++) fb[i] = b[i];
+        for (int i = 0; i &lt; na; i++) fa[i] = a[i];
+        for (int i = 0; i &lt; nb; i++) fb[i] = b[i];
         multiply(fa, fb, na, nb, fc);
         int k = na + nb - 1;
-        vector<int> res(k);
-        for (int i = 0; i < k; i++) res[i] = fc[i];
+        vector&lt;int&gt; res(k);
+        for (int i = 0; i &lt; k; i++) res[i] = fc[i];
         return res;
     }
 } ntt;
 
 int main(int argc, char* argv[]) {
     ios_base::sync_with_stdio(0), cin.tie(0);
-    vector<int> A = {1, 1, 2};
-    vector<int> B = {9, 1, 3};
+    vector&lt;int&gt; A = {1, 1, 2};
+    vector&lt;int&gt; B = {9, 1, 3};
     ntt.init(MOD, 3);
-    vector<int> rez = ntt.multiply(A, B); 
+    vector&lt;int&gt; rez = ntt.multiply(A, B);
     for (int x : rez) {
-        cout << x << " ";
+        cout &lt;&lt; x &lt;&lt; &quot; &quot;;
     }
 }
 
 ========== FFTSolver ==========
 
 namespace FFTSolver {
-	typedef complex<ld> plex;
+	typedef complex&lt;ld&gt; plex;
 
-	vector<vector<plex>> W;
+	vector&lt;vector&lt;plex&gt;&gt; W;
 
 	int __get_log(int N) {
 		return 31 - __builtin_clz(N);
@@ -123,21 +149,21 @@ namespace FFTSolver {
 
 	void construct_roots(int N) {
 		int n = __get_log(N);
-		while (len(W) < n) {
+		while (len(W) &lt; n) {
 			int layer_log = len(W);
-			int k = (1 << layer_log);		
-			W.pb(vector<plex>());
+			int k = (1 &lt;&lt; layer_log);
+			W.pb(vector&lt;plex&gt;());
 			W.back().resize(k);
-			for (int j = 0; j < k; j++) {
+			for (int j = 0; j &lt; k; j++) {
 				W.back()[j] = (plex(cos((2 * M_PI * (ld)j) / (ld)(2 * k)), sin((2 * M_PI * (ld)j) / (ld)(2 * k))));
 			}
 		}
 	}
 
 	void __fft(plex *a, int N, plex e, bool inv) {
-		for (int k = 1, id = 0; k < N; k *= 2, id++) {
-			for (int i = 0; i < N; i += k * 2) {
-				for (int j = 0; j < k; j++) {
+		for (int k = 1, id = 0; k &lt; N; k *= 2, id++) {
+			for (int i = 0; i &lt; N; i += k * 2) {
+				for (int j = 0; j &lt; k; j++) {
 					if (!inv) {
 						plex x = a[i + j], y = a[i + j + k];
 						a[i + j] = x + W[id][j] * y;
@@ -149,16 +175,16 @@ namespace FFTSolver {
 					}
 				}
 			}
-		}	
+		}
 	}
 
-	template <class T>
+	template &lt;class T&gt;
 	void reverse_permutation(T *a, int N) {
-		int N_2 = (N >> 1), r = 0;
-		for (int x = 1; x < N; ++ x) {
+		int N_2 = (N &gt;&gt; 1), r = 0;
+		for (int x = 1; x &lt; N; ++ x) {
 			int h = N_2;
-			while (((r ^= h) & h) == 0) h >>= 1;
-			if (r > x) swap(a[x], a[r]);
+			while (((r ^= h) &amp; h) == 0) h &gt;&gt;= 1;
+			if (r &gt; x) swap(a[x], a[r]);
 		}
 	}
 
@@ -172,17 +198,17 @@ namespace FFTSolver {
 
 	void transform_2_convolutions(plex *a, int N) {
 		plex div_x = plex(0, 1) * (4.0 * N);
-		for (int i = 0; i < N / 2; i++) {
+		for (int i = 0; i &lt; N / 2; i++) {
 			int j = (N - i) % N;
 			a[i] = (a[i] + conj(a[j])) * (a[i] - conj(a[j])) / div_x;
 		}
-		for (int i = N - 1; i > N / 2; i--) {
+		for (int i = N - 1; i &gt; N / 2; i--) {
 			a[i] = conj(a[N - i]);
 		}
 		a[N / 2] = (a[N / 2] + conj(a[N / 2])) * (a[N / 2] - conj(a[N / 2])) / div_x;
 	}
 
-	inline vector<ll> multiply(const vector<ll> &a, const vector<ll> &b) {
+	inline vector&lt;ll&gt; multiply(const vector&lt;ll&gt; &amp;a, const vector&lt;ll&gt; &amp;b) {
 		int N = len(a) + len(b) + 1;
 		while (__builtin_popcount(N) != 1) {
 			N++;
@@ -190,12 +216,12 @@ namespace FFTSolver {
 
 		plex e(cos(2 * M_PI / (ld)N), sin(2 * M_PI / (ld)N));
 
-		vector<plex> mvp(N);
-		for (int i = 0; i < N; i++) {
-			if (i < len(a)) {
+		vector&lt;plex&gt; mvp(N);
+		for (int i = 0; i &lt; N; i++) {
+			if (i &lt; len(a)) {
 				mvp[i].real(a[i]);
 			}
-			if (i < len(b)) {
+			if (i &lt; len(b)) {
 				mvp[i].imag(b[i]);
 			}
 		}
@@ -205,21 +231,21 @@ namespace FFTSolver {
 		complex_convolution(mvp.data(), N, true);
 
 
-		vector<ll> final(N);
-		for (int i = 0; i < N; i++) {
-			final[i] = round(real(mvp[i]));	
+		vector&lt;ll&gt; final(N);
+		for (int i = 0; i &lt; N; i++) {
+			final[i] = round(real(mvp[i]));
 		}
 
 		return final;
 	}
 
-	template<class T>
-	inline vector<T> multiply_high_precision(vector<ll> a, vector<ll> b) {
+	template&lt;class T&gt;
+	inline vector&lt;T&gt; multiply_high_precision(vector&lt;ll&gt; a, vector&lt;ll&gt; b) {
 		int N = max(len(a), len(b));
 		a.resize(N, 0);
 		b.resize(N, 0);
-		vector<ll> A = a;
-		vector<ll> B = b;
+		vector&lt;ll&gt; A = a;
+		vector&lt;ll&gt; B = b;
 		ll C = 0;
 		f(i, N) {
 			C = max(C, abs(a[i]));
@@ -232,11 +258,11 @@ namespace FFTSolver {
 			a[i] %= C;
 			b[i] %= C;
 		}
-		vector<ll> high = multiply(A, B);
-		vector<ll> Ab = multiply(A, b);
-		vector<ll> Ba = multiply(B, a);
-		vector<ll> ab = multiply(a, b);
-		vector<T> gl(len(high));
+		vector&lt;ll&gt; high = multiply(A, B);
+		vector&lt;ll&gt; Ab = multiply(A, b);
+		vector&lt;ll&gt; Ba = multiply(B, a);
+		vector&lt;ll&gt; ab = multiply(a, b);
+		vector&lt;T&gt; gl(len(high));
 
 		T _C(C);
 
@@ -250,7 +276,7 @@ namespace FFTSolver {
 ========== Berleykamp ==========
 
 const ll MOD = 1e9 + 7;
-template<ll MOD>
+template&lt;ll MOD&gt;
 struct Ring {
 	ll value = 0;
 	Ring() {}
@@ -263,8 +289,8 @@ struct Ring {
 		value = floor_mod(value, MOD);
 	}
 	Ring pow(ll p) const {
-		if (p == 0) return 1;	
-		if (p & 1) {
+		if (p == 0) return 1;
+		if (p &amp; 1) {
 			return Ring(value).pow(p - 1) * value;
 		} else {
 			Ring sub = Ring(value).pow(p / 2);
@@ -274,59 +300,59 @@ struct Ring {
 	Ring inv() const {
 		return pow(MOD - 2);
 	}
-	void operator*=(const Ring<MOD> &b) {
+	void operator*=(const Ring&lt;MOD&gt; &amp;b) {
 		value *= b.value;
 		value = floor_mod(value, MOD);
 	}
-	friend Ring operator*(Ring<MOD> a, const Ring<MOD> &b) {
+	friend Ring operator*(Ring&lt;MOD&gt; a, const Ring&lt;MOD&gt; &amp;b) {
 		a *= b;
 		return a;
 	}
-	void operator+=(const Ring<MOD> &b) {
+	void operator+=(const Ring&lt;MOD&gt; &amp;b) {
 		value += b.value;
 		value = floor_mod(value, MOD);
 	}
-	friend Ring operator+(Ring a, const Ring &b) {
+	friend Ring operator+(Ring a, const Ring &amp;b) {
 		a += b;
 		return a;
 	}
-	void operator-=(const Ring<MOD> &b) {
+	void operator-=(const Ring&lt;MOD&gt; &amp;b) {
 		value -= b.value;
 		value = floor_mod(value, MOD);
 	}
-	friend Ring operator-(Ring a, const Ring &b) {
+	friend Ring operator-(Ring a, const Ring &amp;b) {
 		a -= b;
 		return a;
 	}
-	void operator/=(const Ring<MOD> &b) {
-		(*this) *= b.inv();	
+	void operator/=(const Ring&lt;MOD&gt; &amp;b) {
+		(*this) *= b.inv();
 	}
-	friend Ring operator/(Ring a, const Ring &b) {
+	friend Ring operator/(Ring a, const Ring &amp;b) {
 		a /= b;
 		return a;
 	}
-	bool operator==(const Ring<MOD> &b) {
+	bool operator==(const Ring&lt;MOD&gt; &amp;b) {
 		return value == b.value;
 	}
-	friend void fast_print(const Ring<MOD> &b) {
+	friend void fast_print(const Ring&lt;MOD&gt; &amp;b) {
 		fast_print(b.value);
 	}
 };
 
-typedef Ring<MOD> num;
+typedef Ring&lt;MOD&gt; num;
 
 
-template<class T>
+template&lt;class T&gt;
 struct Berleykamp {
-	vector<T> v;
-	vector<T> rec;
+	vector&lt;T&gt; v;
+	vector&lt;T&gt; rec;
 
-	Berleykamp(const vector<T> &_a) {
+	Berleykamp(const vector&lt;T&gt; &amp;_a) {
 		v = _a;
-		vector<T> cur = {1};
-		vector<T> pref = {1};
+		vector&lt;T&gt; cur = {1};
+		vector&lt;T&gt; pref = {1};
 		T dy = 1;
-		for (int i = 0; i < len(v); i++) {
+		for (int i = 0; i &lt; len(v); i++) {
 			T dx = 0;
 			f(j, len(cur)) {
 				dx += v[i - len(cur) + j + 1] * cur[j];
@@ -335,8 +361,8 @@ struct Berleykamp {
 				pref.pb(0);
 			} else {
 				pref.pb(0);
-				vector<T> _new = cur;
-				while (len(_new) < len(pref)) {
+				vector&lt;T&gt; _new = cur;
+				while (len(_new) &lt; len(pref)) {
 					_new.insert(_new.begin(), 0);
 				}
 				f(j, len(pref)) {
@@ -351,25 +377,25 @@ struct Berleykamp {
 	}
 
 	T interpolate(int n) {
-		if (n < len(v)) return v[n];	
+		if (n &lt; len(v)) return v[n];
 		T rez = 0;
-		for (int i = 0; i < len(rec) - 1; i++) {
+		for (int i = 0; i &lt; len(rec) - 1; i++) {
 			rez -= interpolate(n - len(rec) + i + 1) * rec[i];
 		}
-		assert(len(v) == n);	
+		assert(len(v) == n);
 		v.pb(n);
 		return v[n] = rez;
 	}
 
-	vector<T> mod(vector<T> a, vector<T> b) {
-		while (!b.empty() && b.back() == 0) {
+	vector&lt;T&gt; mod(vector&lt;T&gt; a, vector&lt;T&gt; b) {
+		while (!b.empty() &amp;&amp; b.back() == 0) {
 			b.pop_back();
 		}
-		while (len(a) >= len(b)) {
-			while (!a.empty() && a.back() == 0) {
+		while (len(a) &gt;= len(b)) {
+			while (!a.empty() &amp;&amp; a.back() == 0) {
 				a.pop_back();
 			}
-			if (len(a) < len(b)) return a;
+			if (len(a) &lt; len(b)) return a;
 
 			T factor = a.back() / b.back();
 
@@ -380,8 +406,8 @@ struct Berleykamp {
 		return a;
 	}
 
-	vector<T> mul(vector<T> a, vector<T> b) {
-		vector<T> c(len(a) + len(b));
+	vector&lt;T&gt; mul(vector&lt;T&gt; a, vector&lt;T&gt; b) {
+		vector&lt;T&gt; c(len(a) + len(b));
 		f(i, len(a)) {
 			f(j, len(b)) {
 				c[i + j] += a[i] * b[j];
@@ -390,21 +416,21 @@ struct Berleykamp {
 		return c;
 	}
 
-	vector<T> fast_pow(vector<T> x, vector<T> M, int p) {
+	vector&lt;T&gt; fast_pow(vector&lt;T&gt; x, vector&lt;T&gt; M, int p) {
 		if (p == 0) return {T(1)};
-		if (p & 1) {
+		if (p &amp; 1) {
 			return mod(mul(fast_pow(x, M, p - 1), x), M);
 		} else {
-			vector<T> sub = fast_pow(x, M, p / 2);
+			vector&lt;T&gt; sub = fast_pow(x, M, p / 2);
 			return mod(mul(sub, sub), M);
 		}
 	}
 
 	T interpolate__fast(int n) {
-		vector<T> x = {0, 1};
+		vector&lt;T&gt; x = {0, 1};
 		x = fast_pow(x, rec, n);
 		T final = 0;
-		for (int i = 0; i < len(x); i++) {
+		for (int i = 0; i &lt; len(x); i++) {
 			final += x[i] * interpolate(i);
 		}
 		return final;
@@ -416,14 +442,14 @@ struct Berleykamp {
 
 struct Dance {
 	int n, m;
-	vector<vector<int>> v;
-	vector<int> rez;
-	vector<int> row, col;
-	vector<bool> srow, scol;
-	vector<int> min_value, min_pos;
-	vector<pii> invoker;
+	vector&lt;vector&lt;int&gt;&gt; v;
+	vector&lt;int&gt; rez;
+	vector&lt;int&gt; row, col;
+	vector&lt;bool&gt; srow, scol;
+	vector&lt;int&gt; min_value, min_pos;
+	vector&lt;pii&gt; invoker;
 
-	Dance(vector<vector<int>> _v) {
+	Dance(vector&lt;vector&lt;int&gt;&gt; _v) {
 		v = _v;
 		n = len(v);
 		m = len(v[0]);
@@ -437,19 +463,19 @@ struct Dance {
 		return v[i][j] + row[i] + col[j];
 	}
 
-	pair<vector<int>, int> match() {
+	pair&lt;vector&lt;int&gt;, int&gt; match() {
 		f(cur, n) {
-			min_value = vector<int>(m, 1e9);
-			min_pos = vector<int>(m, -1);
-			invoker = vector<pii>(n, mp(-1, -1));
-			srow = vector<bool>(n, false);
-			scol = vector<bool>(m, false);
-			
+			min_value = vector&lt;int&gt;(m, 1e9);
+			min_pos = vector&lt;int&gt;(m, -1);
+			invoker = vector&lt;pii&gt;(n, mp(-1, -1));
+			srow = vector&lt;bool&gt;(n, false);
+			scol = vector&lt;bool&gt;(m, false);
+
 			int next = cur;
 			while (true) {
 				srow[next] = true;
 				f(j, m) {
-					if (get(next, j) < min_value[j]) {
+					if (get(next, j) &lt; min_value[j]) {
 						min_value[j] = get(next, j);
 						min_pos[j] = next;
 					}
@@ -458,7 +484,7 @@ struct Dance {
 				pii _min = mp(-1, -1);
 				f(j, m) {
 					if (scol[j]) continue;
-					if (_min.x == -1 || get(_min.x, _min.y) > min_value[j]) {
+					if (_min.x == -1 || get(_min.x, _min.y) &gt; min_value[j]) {
 						_min = mp(min_pos[j], j);
 					}
 				}
@@ -507,18 +533,18 @@ struct Dance {
 
 ========== Auto ==========
 
-vector<int> suffix_array(const string &s) {
+vector&lt;int&gt; suffix_array(const string &amp;s) {
     int n = s.size(), N = max(n, 257);
-    vector<int> sa(n), ra(n);
-    for (int i = 0; i < n; i++) sa[i] = i, ra[i] = s[i];
-    for (int k = 0; k < n; k ? k <<= 1 : k++) {
-        vector<int> nsa(sa), nra(n), cnt(N);
-        for (int i = 0; i < n; ++i) nsa[i] -= k - (nsa[i] < k ? n : 0);
-        for (int i = 0; i < n; ++i) cnt[ra[i]]++;
-        for (int i = 1; i < N; ++i) cnt[i] += cnt[i - 1];
-        for (int i = n - 1; i >= 0; --i) sa[--cnt[ra[nsa[i]]]] = nsa[i];
+    vector&lt;int&gt; sa(n), ra(n);
+    for (int i = 0; i &lt; n; i++) sa[i] = i, ra[i] = s[i];
+    for (int k = 0; k &lt; n; k ? k &lt;&lt;= 1 : k++) {
+        vector&lt;int&gt; nsa(sa), nra(n), cnt(N);
+        for (int i = 0; i &lt; n; ++i) nsa[i] -= k - (nsa[i] &lt; k ? n : 0);
+        for (int i = 0; i &lt; n; ++i) cnt[ra[i]]++;
+        for (int i = 1; i &lt; N; ++i) cnt[i] += cnt[i - 1];
+        for (int i = n - 1; i &gt;= 0; --i) sa[--cnt[ra[nsa[i]]]] = nsa[i];
         int r = 0;
-        for (int i = 1; i < n; ++i) {
+        for (int i = 1; i &lt; n; ++i) {
             if (ra[sa[i]] != ra[sa[i - 1]]) r++;
             else if (ra[(sa[i] + k) % n] != ra[(sa[i - 1] + k) % n]) r++;
             nra[sa[i]] = r;
@@ -532,7 +558,7 @@ int nodes = 0;
 
 struct Auto {
 	struct Node {
-		map<char, Node*> go;
+		map&lt;char, Node*&gt; go;
 		int max_len = 0;
 		Node *sufflink = NULL;
 		int id = 0;
@@ -544,9 +570,9 @@ struct Auto {
 
 	Node *clone(Node *node) {
 		Node *cl = new Node();
-		cl->go = node->go;
-		cl->max_len = node->max_len;
-		cl->sufflink = node->sufflink;
+		cl-&gt;go = node-&gt;go;
+		cl-&gt;max_len = node-&gt;max_len;
+		cl-&gt;sufflink = node-&gt;sufflink;
 		return cl;
 	}
 
@@ -559,53 +585,53 @@ struct Auto {
 
 	void add(char c) {
 		Node *_new = new Node();
-		_new->max_len = cur->max_len + 1;
-		_new->sufflink = root;
-		while (cur && !cur->go.count(c)) {
-			cur->go[c] = _new;
-			cur = cur->sufflink;
-		}	
+		_new-&gt;max_len = cur-&gt;max_len + 1;
+		_new-&gt;sufflink = root;
+		while (cur &amp;&amp; !cur-&gt;go.count(c)) {
+			cur-&gt;go[c] = _new;
+			cur = cur-&gt;sufflink;
+		}
 		if (cur) {
-			if (cur->go[c]->max_len == cur->max_len + 1) {
-				_new->sufflink = cur->go[c];
+			if (cur-&gt;go[c]-&gt;max_len == cur-&gt;max_len + 1) {
+				_new-&gt;sufflink = cur-&gt;go[c];
 			} else {
-				Node *q = cur->go[c];
-				Node *p = clone(cur->go[c]);
-				_new->sufflink = p;
-				cur->go[c]->sufflink = p;
-				p->max_len = cur->max_len + 1;
+				Node *q = cur-&gt;go[c];
+				Node *p = clone(cur-&gt;go[c]);
+				_new-&gt;sufflink = p;
+				cur-&gt;go[c]-&gt;sufflink = p;
+				p-&gt;max_len = cur-&gt;max_len + 1;
 
 				while (cur) {
-					if (cur->go[c] == q) {
-						cur->go[c] = p;
-						cur = cur->sufflink;
+					if (cur-&gt;go[c] == q) {
+						cur-&gt;go[c] = p;
+						cur = cur-&gt;sufflink;
 					} else {
 						break;
 					}
-				}	
+				}
 			}
 		}
 		cur = _new;
 	}
 
-	bool check(Node *node, string &s, int i) {
-		if (i >= len(s)) return true;
-		if (!node->go.count(s[i])) return false;
-		return check(node->go[s[i]], s, i + 1);
+	bool check(Node *node, string &amp;s, int i) {
+		if (i &gt;= len(s)) return true;
+		if (!node-&gt;go.count(s[i])) return false;
+		return check(node-&gt;go[s[i]], s, i + 1);
 	}
 };
 
 ========== z_function ==========
 
-vector<int> z_function (string s) {
+vector&lt;int&gt; z_function (string s) {
 	int n = (int) s.length();
-	vector<int> z (n);
-	for (int i=1, l=0, r=0; i<n; ++i) {
-		if (i <= r)
+	vector&lt;int&gt; z (n);
+	for (int i=1, l=0, r=0; i&lt;n; ++i) {
+		if (i &lt;= r)
 			z[i] = min (r-i+1, z[i-l]);
-		while (i+z[i] < n && s[z[i]] == s[i+z[i]])
+		while (i+z[i] &lt; n &amp;&amp; s[z[i]] == s[i+z[i]])
 			++z[i];
-		if (i+z[i]-1 > r)
+		if (i+z[i]-1 &gt; r)
 			l = i,  r = i+z[i]-1;
 	}
 	return z;
@@ -614,12 +640,12 @@ vector<int> z_function (string s) {
 
 ========== prefix_function ==========
 
-vector<int> prefix_function (string s) {
+vector&lt;int&gt; prefix_function (string s) {
 	int n = (int) s.length();
-	vector<int> pi (n);
-	for (int i=1; i<n; ++i) {
+	vector&lt;int&gt; pi (n);
+	for (int i=1; i&lt;n; ++i) {
 		int j = pi[i-1];
-		while (j > 0 && s[i] != s[j])
+		while (j &gt; 0 &amp;&amp; s[i] != s[j])
 			j = pi[j-1];
 		if (s[i] == s[j])  ++j;
 		pi[i] = j;
@@ -631,22 +657,22 @@ vector<int> prefix_function (string s) {
 
 struct BipolarDisorder {
 	int n;
-	vector<vector<int>> g;
-	vector<pii> edges;
-	vector<int> uptime;
-	vector<int> tin;
-	vector<bool> used;
-	vector<int> buff;
-	vector<bool> pick;
-	vector<int> order;
+	vector&lt;vector&lt;int&gt;&gt; g;
+	vector&lt;pii&gt; edges;
+	vector&lt;int&gt; uptime;
+	vector&lt;int&gt; tin;
+	vector&lt;bool&gt; used;
+	vector&lt;int&gt; buff;
+	vector&lt;bool&gt; pick;
+	vector&lt;int&gt; order;
 
-	vector<int> at;
+	vector&lt;int&gt; at;
 
 	int timer = 0;
 
 	void init_time(int v) {
 		used[v] = true;
-		at[timer] = v; 
+		at[timer] = v;
 		tin[v] = uptime[v] = timer++;
 		for (int sub : g[v]) {
 			if (used[sub]) continue;
@@ -663,16 +689,16 @@ struct BipolarDisorder {
 		}
 	}
 	bool is_critical_slow(int v) {
-		used = vector<bool>(n, false);
+		used = vector&lt;bool&gt;(n, false);
 		int cnt = 0;
 		for (int sub : g[v]) {
 			if (used[sub]) continue;
 			cnt++;
 			check(sub, v);
 		}
-		return cnt >= 2;
+		return cnt &gt;= 2;
 	}
-	vector<bool> crit;
+	vector&lt;bool&gt; crit;
 	void go(int v, int _p) {
 		used[v] = true;
 		for (int sub : g[v]) {
@@ -682,7 +708,7 @@ struct BipolarDisorder {
 			} else {
 				go(sub, v);
 				uptime[v] = min(uptime[v], uptime[sub]);
-				if (uptime[sub] >= tin[v]) {
+				if (uptime[sub] &gt;= tin[v]) {
 					crit[v] = true;
 				}
 			}
@@ -690,12 +716,12 @@ struct BipolarDisorder {
 	}
 
 	void update_critical() {
-		tin = vector<int>(n, 0);
-		uptime = vector<int>(n, 0);
-		used = vector<bool>(n, false);
+		tin = vector&lt;int&gt;(n, 0);
+		uptime = vector&lt;int&gt;(n, 0);
+		used = vector&lt;bool&gt;(n, false);
 		init_time(0);
-		crit = vector<bool>(n, false);
-		used = vector<bool>(n, false);
+		crit = vector&lt;bool&gt;(n, false);
+		used = vector&lt;bool&gt;(n, false);
 		go(0, -1);
 		crit[0] = is_critical_slow(0);
 	}
@@ -709,64 +735,64 @@ struct BipolarDisorder {
 
 		Node() {
 			prior = rng();
-		} 
+		}
 	};
 
 	int get_size(Node *node) {
-		return node ? node->size : 0;
+		return node ? node-&gt;size : 0;
 	}
 
 	void update(Node *node) {
-		node->size = get_size(node->l) + get_size(node->r) + 1;
+		node-&gt;size = get_size(node-&gt;l) + get_size(node-&gt;r) + 1;
 	}
 
 	Node *merge(Node *l, Node *r) {
 		if (!l) return r;
 		if (!r) return l;
-		if (l->prior > r->prior) {
-			l->r = merge(l->r, r);
-			l->r->pref = l;
+		if (l-&gt;prior &gt; r-&gt;prior) {
+			l-&gt;r = merge(l-&gt;r, r);
+			l-&gt;r-&gt;pref = l;
 			update(l);
 			return l;
 		} else {
-			r->l = merge(l, r->l);
-			r->l->pref = r;
+			r-&gt;l = merge(l, r-&gt;l);
+			r-&gt;l-&gt;pref = r;
 			update(r);
 			return r;
 		}
 	}
 
-	pair<Node*, Node*> split(Node *node, int k) {
+	pair&lt;Node*, Node*&gt; split(Node *node, int k) {
 		if (!node) return mp(node, node);
-		if (get_size(node->l) >= k) {
-			if (node->l) node->l->pref = NULL;
-			auto t = split(node->l, k);
-			node->l = NULL;
+		if (get_size(node-&gt;l) &gt;= k) {
+			if (node-&gt;l) node-&gt;l-&gt;pref = NULL;
+			auto t = split(node-&gt;l, k);
+			node-&gt;l = NULL;
 			update(node);
 			return mp(t.x, merge(t.y, node));
 		} else {
-			if (node->r) node->r->pref = NULL;
-			auto t = split(node->r, k - get_size(node->l) - 1);
-			node->r = NULL;
+			if (node-&gt;r) node-&gt;r-&gt;pref = NULL;
+			auto t = split(node-&gt;r, k - get_size(node-&gt;l) - 1);
+			node-&gt;r = NULL;
 			update(node);
 			return mp(merge(node, t.x), t.y);
 		}
 	}
 
 	int get_id(Node *node) {
-		int id = get_size(node->l);
-		while (node->pref) {
-			if (node->pref->r == node) {
-				id += 1 + get_size(node->pref->l);
+		int id = get_size(node-&gt;l);
+		while (node-&gt;pref) {
+			if (node-&gt;pref-&gt;r == node) {
+				id += 1 + get_size(node-&gt;pref-&gt;l);
 			}
-			node = node->pref;
+			node = node-&gt;pref;
 		}
 		return id;
 	}
 
 	Node *cart = NULL;
 
-	vector<Node*> pres;
+	vector&lt;Node*&gt; pres;
 
 	void dfs(int v, int _p, int end) {
 		buff.pb(v);
@@ -800,10 +826,10 @@ struct BipolarDisorder {
 		}
 
 		int B = at[uptime[v]];
-		if (!buff.empty() && pick[B] && B != A) {
+		if (!buff.empty() &amp;&amp; pick[B] &amp;&amp; B != A) {
 			int itA = get_id(pres[A]);
 			int itB = get_id(pres[B]);
-			if (itA < itB) {
+			if (itA &lt; itB) {
 				auto t = split(cart, itA + 1);
 				for (int x : buff) {
 					pres[x] = new Node();
@@ -814,7 +840,7 @@ struct BipolarDisorder {
 				reverse(buff.begin(), buff.end());
 				auto t = split(cart, itB + 1);
 				for (int x : buff) {
-					pres[x] = new Node();	
+					pres[x] = new Node();
 					t.x = merge(t.x, pres[x]);
 				}
 				cart = merge(t.x, t.y);
@@ -835,7 +861,7 @@ struct BipolarDisorder {
 		}
 	}
 
-	set<int> finded_crit;
+	set&lt;int&gt; finded_crit;
 	void _index(int v) {
 		used[v] = true;
 		for (int sub : g[v]) {
@@ -863,12 +889,12 @@ struct BipolarDisorder {
 		edges.emplace_back(a, b);
 	}
 
-	vector<int> get_priors() {
+	vector&lt;int&gt; get_priors() {
 		{
-			used = vector<bool>(n, false);
+			used = vector&lt;bool&gt;(n, false);
 			update_critical();
-			used = vector<bool>(n, false);
-			vector<int> pos;
+			used = vector&lt;bool&gt;(n, false);
+			vector&lt;int&gt; pos;
 			f(i, n) {
 				if (crit[i]) continue;
 				if (!used[i]) {
@@ -878,13 +904,13 @@ struct BipolarDisorder {
 					} else {
 						finded_crit.clear();
 						_index(i);
-						if (len(finded_crit) <= 1) {
+						if (len(finded_crit) &lt;= 1) {
 							pos.pb(i);
 						}
 					}
 				}
 			}
-			if (len(pos) <= 1) {
+			if (len(pos) &lt;= 1) {
 				pos.pb(n - 1);
 			}
 			if (len(pos) != 2) {
@@ -895,15 +921,15 @@ struct BipolarDisorder {
 			int end = pos[1];
 			shuffle(pos.begin(), pos.end(), rng);
 
-			used = vector<bool>(n, false);
-			pick = vector<bool>(n, false);
+			used = vector&lt;bool&gt;(n, false);
+			pick = vector&lt;bool&gt;(n, false);
 			pres.resize(n, NULL);
 			timer = 0;
 			dfs(start, -1, end);
 			buff.clear();
-			used = vector<bool>(n, false);
+			used = vector&lt;bool&gt;(n, false);
 			echo(start, -1);
-			vector<int> p(n);
+			vector&lt;int&gt; p(n);
 			f(i, n) {
 				if (pres[i]) {
 					p[i] = get_id(pres[i]);
@@ -911,9 +937,9 @@ struct BipolarDisorder {
 					return {};
 				}
 			}
-			vector<int> in(n), out(n);
+			vector&lt;int&gt; in(n), out(n);
 			for (pii edge : edges) {
-				if (p[edge.x] > p[edge.y]) {
+				if (p[edge.x] &gt; p[edge.y]) {
 					swap(edge.x, edge.y);
 				}
 				in[edge.y]++;
@@ -921,10 +947,10 @@ struct BipolarDisorder {
 			}
 			bool fail = false;
 			f(i, n) {
-				if (i != start && in[i] == 0) {
+				if (i != start &amp;&amp; in[i] == 0) {
 					fail = true;
 				}
-				if (i != end && out[i] == 0) {
+				if (i != end &amp;&amp; out[i] == 0) {
 					fail = true;
 				}
 			}
@@ -941,10 +967,10 @@ struct BipolarDisorder {
 ========== MaxMatch ==========
 
 struct MaxMatch {
-	vector<vector<int>> g;
-	vector<int> match;
-	vector<bool> used;
-	vector<int> p;
+	vector&lt;vector&lt;int&gt;&gt; g;
+	vector&lt;int&gt; match;
+	vector&lt;bool&gt; used;
+	vector&lt;int&gt; p;
 
 	MaxMatch(int n) {
 		g.resize(n);
@@ -980,7 +1006,7 @@ struct MaxMatch {
 			if (dfs(__t)) {
 				return true;
 			} else {
-				match[sub] = __t;	
+				match[sub] = __t;
 				match[__t] = sub;
 				match[v] = -1;
 			}
@@ -990,18 +1016,18 @@ struct MaxMatch {
 
 	void upgrade() {
 		shuffle(p.begin(), p.end(), rng);
-		used = vector<bool>(len(g), false);
+		used = vector&lt;bool&gt;(len(g), false);
 		for (int i : p) {
-			if (match[i] == -1 && !used[i]) {
+			if (match[i] == -1 &amp;&amp; !used[i]) {
 				dfs(i);
 			}
 		}
 	}
 
-	vector<pii> edges() {
-		vector<pii> rez;
-		for (int i = 0; i < len(g); i++) {
-			if (match[i] != -1 && i < match[i]) {
+	vector&lt;pii&gt; edges() {
+		vector&lt;pii&gt; rez;
+		for (int i = 0; i &lt; len(g); i++) {
+			if (match[i] != -1 &amp;&amp; i &lt; match[i]) {
 				rez.emplace_back(i, match[i]);
 			}
 		}
@@ -1013,13 +1039,13 @@ struct MaxMatch {
 
 struct DTree {
 	int n;
-	vector<int> parent, label, real;
+	vector&lt;int&gt; parent, label, real;
 	int cnt = 0;
-	vector<vector<int>> edge, succ, pred;
-	vector<int> semi, idom, ancestor, best;
-	vector<deque<int>> bucket;
+	vector&lt;vector&lt;int&gt;&gt; edge, succ, pred;
+	vector&lt;int&gt; semi, idom, ancestor, best;
+	vector&lt;deque&lt;int&gt;&gt; bucket;
 
-	vector<vector<int>> tree;
+	vector&lt;vector&lt;int&gt;&gt; tree;
 
 	void add_edge(int a, int b) {
 		edge[a + 1].pb(b + 1);
@@ -1043,7 +1069,7 @@ struct DTree {
 
 	void dfs(int u) {
 		label[u] = ++cnt; real[cnt] = u;
-		for (vector<int>::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
+		for (vector&lt;int&gt;::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
 			int v = *it;
 			if (v == parent[u] || label[v] != -1) continue;
 			parent[v] = u;
@@ -1059,7 +1085,7 @@ struct DTree {
 		int a = ancestor[v];
 		if (ancestor[a] == 0) return;
 		compress(a);
-		if (semi[best[v]] > semi[best[a]]) best[v] = best[a];
+		if (semi[best[v]] &gt; semi[best[a]]) best[v] = best[a];
 		ancestor[v] = ancestor[a];
 	}
 
@@ -1069,29 +1095,29 @@ struct DTree {
 		return best[v];
 	}
 
-	void dominator() { // clear succ & pred, let cnt = 0 first
-		for (int i = 1; i <= n; ++i) label[i] = -1;
+	void dominator() { // clear succ &amp; pred, let cnt = 0 first
+		for (int i = 1; i &lt;= n; ++i) label[i] = -1;
 		dfs(n); // n is root
-		for (int u = 1; u <= n; ++u) {
-			for (vector<int>::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
+		for (int u = 1; u &lt;= n; ++u) {
+			for (vector&lt;int&gt;::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
 				int v = *it;
-				if (label[u] != -1 && label[v] != -1) {
+				if (label[u] != -1 &amp;&amp; label[v] != -1) {
 					succ[label[u]].push_back(label[v]);
 					pred[label[v]].push_back(label[u]);
 				}
 			}
 		}
-		for (int i = 1; i <= n; ++i) {
+		for (int i = 1; i &lt;= n; ++i) {
 			semi[i] = best[i] = i;
 			idom[i] = ancestor[i] = 0;
 			bucket[i].clear();
 		}
-		for (int w = cnt; w >= 2; --w) {
+		for (int w = cnt; w &gt;= 2; --w) {
 			int p = label[parent[real[w]]];
-			for (vector<int>::iterator it = pred[w].begin(); it != pred[w].end(); ++it) {
+			for (vector&lt;int&gt;::iterator it = pred[w].begin(); it != pred[w].end(); ++it) {
 				int v = *it;
 				int u = eval(v);
-				if (semi[w] > semi[u]) semi[w] = semi[u];
+				if (semi[w] &gt; semi[u]) semi[w] = semi[u];
 			}
 			bucket[semi[w]].push_back(w);
 			link(p, w);
@@ -1099,14 +1125,14 @@ struct DTree {
 				int v = bucket[p].front();
 				bucket[p].pop_front();
 				int u = eval(v);
-				idom[v] = (semi[u] < p ? u : p);
+				idom[v] = (semi[u] &lt; p ? u : p);
 			}
 		}
-		for (int w = 2; w <= cnt; ++w) {
+		for (int w = 2; w &lt;= cnt; ++w) {
 			if (idom[w] != semi[w]) idom[w] = idom[idom[w]];
 		}
 		idom[1] = 0;
-		for (int i = 1; i <= cnt; ++i) {
+		for (int i = 1; i &lt;= cnt; ++i) {
 			int u = real[idom[i]], v = real[i];
 			// u is immediate dominator of v (i == 1?)
 			// print u - 1, v - 1;
@@ -1116,10 +1142,10 @@ struct DTree {
 
 int n, m;
 
-vector<vector<int>> g;
-vector<bool> used;
-vector<bool> R;
-vector<int> rez;
+vector&lt;vector&lt;int&gt;&gt; g;
+vector&lt;bool&gt; used;
+vector&lt;bool&gt; R;
+vector&lt;int&gt; rez;
 
 bool ktun(int v) {
 	used[v] = true;
@@ -1140,7 +1166,7 @@ bool ktun(int v) {
 	return false;
 }
 
-pair<int, vector<bool>> match(vector<pii> edges) {
+pair&lt;int, vector&lt;bool&gt;&gt; match(vector&lt;pii&gt; edges) {
 	g.clear();
 	R.clear();
 	rez.clear();
@@ -1150,30 +1176,30 @@ pair<int, vector<bool>> match(vector<pii> edges) {
 	for (pii e : edges) {
 		g[e.x].pb(e.y);
 	}
-	used = vector<bool>(n, false);
+	used = vector&lt;bool&gt;(n, false);
 	f(i, n) {
 		if (ktun(i)) {
-			used = vector<bool>(n, false);		
+			used = vector&lt;bool&gt;(n, false);
 		}
 	}
-	DTree tree(2 * n + 1);	
+	DTree tree(2 * n + 1);
 	f(i, n) {
 		for (int sub : g[i]) {
 			if (rez[sub] == i) {
 				tree.add_edge(sub + n, i);
 			} else {
-				tree.add_edge(i, sub + n);	
+				tree.add_edge(i, sub + n);
 			}
 		}
 	}
-	vector<bool> L(n);
+	vector&lt;bool&gt; L(n);
 	f(i, n) {
 		if (rez[i] != -1) {
 			L[rez[i]] = true;
 		}
 	}
-	R = vector<bool>(n, false);
-	used = vector<bool>(n, false);	
+	R = vector&lt;bool&gt;(n, false);
+	used = vector&lt;bool&gt;(n, false);
 	f(i, n) {
 		if (!L[i]) {
 			tree.add_edge(2 * n, i);
@@ -1181,7 +1207,7 @@ pair<int, vector<bool>> match(vector<pii> edges) {
 		}
 	}
 	tree.dominator();
-	vector<bool> can_del(n, false);
+	vector&lt;bool&gt; can_del(n, false);
 	f(i, n) {
 		if (!L[i]) {
 			can_del[i] = true;
@@ -1191,7 +1217,7 @@ pair<int, vector<bool>> match(vector<pii> edges) {
 		if (rez[i] == -1) {
 		} else {
 			if (R[i]) {
-				bool found = false;	
+				bool found = false;
 				int j = i + n;
 				while (j != -1) {
 					if (j == rez[i]) {
@@ -1212,7 +1238,7 @@ pair<int, vector<bool>> match(vector<pii> edges) {
 
 signed main(signed argc, char *argv[]) {
 	scan n, m;
-	vector<pii> edges, rev;
+	vector&lt;pii&gt; edges, rev;
 	f(i, m) {
 		int a, b;
 		scan a, b;
@@ -1223,7 +1249,7 @@ signed main(signed argc, char *argv[]) {
 	auto A = match(edges);
 	auto B = match(rev);
 	int y = min(A.x, B.x);
-	vector<int> free;
+	vector&lt;int&gt; free;
 	f(i, n) {
 		if (A.y[i] || B.y[i]) {
 			free.pb(i + 1);
@@ -1240,12 +1266,12 @@ signed main(signed argc, char *argv[]) {
 
 ========== interpol ==========
 
-template<class T>
-vector<T> interpol(const vector<pair<T, T>> &pts) {
+template&lt;class T&gt;
+vector&lt;T&gt; interpol(const vector&lt;pair&lt;T, T&gt;&gt; &amp;pts) {
 	if (pts.empty()) return {};
-	vector<T> holy;
-	vector<T> zero = {1};
-	auto calc = [](vector<T> &poly, const T &x) {
+	vector&lt;T&gt; holy;
+	vector&lt;T&gt; zero = {1};
+	auto calc = [](vector&lt;T&gt; &amp;poly, const T &amp;x) {
 		T s = 0;
 		T p = 1;
 		f(j, len(poly)) {
@@ -1255,17 +1281,17 @@ vector<T> interpol(const vector<pair<T, T>> &pts) {
 		return s;
 	};
 	holy.emplace_back(pts[0].y);
-	for (int i = 1; i < len(pts); i++) {
+	for (int i = 1; i &lt; len(pts); i++) {
 		zero.insert(zero.begin(), 0);
 		f(j, len(zero) - 1) {
 			zero[j] -= zero[j + 1] * pts[i - 1].x;
 		}
 		T sub = pts[i].y - calc(holy, pts[i].x);
 		T coef = sub / calc(zero, pts[i].x);
-		while (len(holy) < len(zero)) {
+		while (len(holy) &lt; len(zero)) {
 			holy.pb(0);
 		}
-		for (int j = 0; j < len(zero); j++) {
+		for (int j = 0; j &lt; len(zero); j++) {
 			holy[j] += zero[j] * coef;
 		}
 	}
@@ -1275,14 +1301,14 @@ vector<T> interpol(const vector<pair<T, T>> &pts) {
 ========== Bridges ==========
 
 const int MAXN = ...;
-vector<int> g[MAXN];
+vector&lt;int&gt; g[MAXN];
 bool used[MAXN];
 int timer, tin[MAXN], fup[MAXN];
- 
+
 void dfs (int v, int p = -1) {
 	used[v] = true;
 	tin[v] = fup[v] = timer++;
-	for (size_t i=0; i<g[v].size(); ++i) {
+	for (size_t i=0; i&lt;g[v].size(); ++i) {
 		int to = g[v][i];
 		if (to == p)  continue;
 		if (used[to])
@@ -1290,32 +1316,32 @@ void dfs (int v, int p = -1) {
 		else {
 			dfs (to, v);
 			fup[v] = min (fup[v], fup[to]);
-			if (fup[to] > tin[v])
+			if (fup[to] &gt; tin[v])
 				IS_BRIDGE(v,to);
 		}
 	}
 }
- 
+
 void find_bridges() {
 	timer = 0;
-	for (int i=0; i<n; ++i)
+	for (int i=0; i&lt;n; ++i)
 		used[i] = false;
-	for (int i=0; i<n; ++i)
+	for (int i=0; i&lt;n; ++i)
 		if (!used[i])
 			dfs (i);
 }
 
 ========== CriticalPoints ==========
 
-vector<int> g[MAXN];
+vector&lt;int&gt; g[MAXN];
 bool used[MAXN];
 int timer, tin[MAXN], fup[MAXN];
- 
+
 void dfs (int v, int p = -1) {
 	used[v] = true;
 	tin[v] = fup[v] = timer++;
 	int children = 0;
-	for (size_t i=0; i<g[v].size(); ++i) {
+	for (size_t i=0; i&lt;g[v].size(); ++i) {
 		int to = g[v][i];
 		if (to == p)  continue;
 		if (used[to])
@@ -1323,33 +1349,33 @@ void dfs (int v, int p = -1) {
 		else {
 			dfs (to, v);
 			fup[v] = min (fup[v], fup[to]);
-			if (fup[to] >= tin[v] && p != -1)
+			if (fup[to] &gt;= tin[v] &amp;&amp; p != -1)
 				IS_CUTPOINT(v);
 			++children;
 		}
 	}
-	if (p == -1 && children > 1)
+	if (p == -1 &amp;&amp; children &gt; 1)
 		IS_CUTPOINT(v);
 }
- 
+
 int main() {
 	int n;
-	... чтение n и g ...
- 
+B
+
 	timer = 0;
-	for (int i=0; i<n; ++i)
+	for (int i=0; i&lt;n; ++i)
 		used[i] = false;
 	dfs (0);
 }
 
 ========== determinant ==========
 
-template<class T>
-T det(vector<vector<T>> v) {
+template&lt;class T&gt;
+T det(vector&lt;vector&lt;T&gt;&gt; v) {
 	int n = len(v);
 	T d = 1;
-	for (int i = 0; i < n; i++) {
-		for (int j = i + 1; j < n; j++) {
+	for (int i = 0; i &lt; n; i++) {
+		for (int j = i + 1; j &lt; n; j++) {
 			if (v[j][i] != T(0)) {
 				swap(v[j], v[i]);
 				d *= -1;
@@ -1358,12 +1384,16 @@ T det(vector<vector<T>> v) {
 		}
 		if (v[i][i] == 0) return (T)0;
 		d *= v[i][i];
-		for (int j = i + 1; j < n; j++) {
+		for (int j = i + 1; j &lt; n; j++) {
 			num coef = v[j][i] / v[i][i];
-			for (int k = i; k < n; k++) {
+			for (int k = i; k &lt; n; k++) {
 				v[j][k] -= (v[i][k] * coef);
 			}
 		}
 	}
 	return d;
 }
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

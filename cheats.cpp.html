@@ -1,0 +1,1404 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/templates/cheats.cpp.html</title>
+<meta name="Generator" content="Vim/8.0">
+<meta name="plugin-version" content="vim7.4_v2">
+<meta name="syntax" content="cpp">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,prevent_copy=">
+<meta name="colorscheme" content="none">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+* { font-size: 1em; }
+.Constant { color: #c00000; }
+.Statement { color: #af5f00; }
+.PreProc { color: #c000c0; }
+.Type { color: #008000; }
+.Comment { color: #0000c0; }
+-->
+</style>
+
+<script type='text/javascript'>
+<!--
+
+-->
+</script>
+</head>
+<body>
+<pre id='vimCodeElement'>
+
+========== FFTNum ==========
+
+<span class="PreProc">#define FOR(i, a, b) </span><span class="Statement">for</span><span class="PreProc"> (</span><span class="Type">int</span><span class="PreProc"> i = (a); i &lt; (b); ++i)</span>
+<span class="PreProc">#define sz(a) </span><span class="Type">int</span><span class="PreProc">((a).size())</span>
+<span class="Type">typedef</span> <span class="Type">long</span> <span class="Type">long</span> ll;
+<span class="Type">typedef</span> vector&lt;<span class="Type">int</span>&gt; vi;
+<span class="Type">const</span> <span class="Type">int</span> MOD = <span class="Constant">119</span> &lt;&lt; <span class="Constant">23</span> | <span class="Constant">1</span>;
+<span class="Type">const</span> <span class="Type">int</span> FFTMOD = <span class="Constant">119</span> &lt;&lt; <span class="Constant">23</span> | <span class="Constant">1</span>;
+<span class="Type">inline</span> <span class="Type">void</span> addmod(<span class="Type">int</span>&amp; a, <span class="Type">int</span> val, <span class="Type">int</span> p = MOD) {<span class="Statement">if</span> ((a = (a + val)) &gt;= p) a -= p;}
+<span class="Type">inline</span> <span class="Type">int</span> mult(<span class="Type">int</span> a, <span class="Type">int</span> b, <span class="Type">int</span> p = MOD) {<span class="Statement">return</span> (ll) a * b % p;}
+
+<span class="Type">struct</span> NTT {
+    <span class="Type">static</span> <span class="Type">const</span> <span class="Type">int</span> MAXF = <span class="Constant">1</span> &lt;&lt; <span class="Constant">20</span>;
+    <span class="Type">int</span> pr;
+    <span class="Type">int</span> rts[MAXF + <span class="Constant">1</span>];
+    <span class="Type">int</span> bitrev[MAXF];
+    <span class="Type">int</span> iv[MAXF + <span class="Constant">1</span>];
+
+    <span class="Type">int</span> fpow(<span class="Type">int</span> a, <span class="Type">int</span> k, <span class="Type">int</span> p) {
+        <span class="Statement">if</span> (!k) <span class="Statement">return</span> <span class="Constant">1</span>;
+        <span class="Type">int</span> res = a, tmp = a;
+        k--;
+        <span class="Statement">while</span> (k) {
+            <span class="Statement">if</span> (k &amp; <span class="Constant">1</span>) {
+                res = (<span class="Type">long</span> <span class="Type">long</span>) res * tmp % p;
+            }
+            tmp = (<span class="Type">long</span> <span class="Type">long</span>) tmp * tmp % p;
+            k &gt;&gt;= <span class="Constant">1</span>;
+        }
+        <span class="Statement">return</span> res;
+    }
+    <span class="Type">void</span> init(<span class="Type">int</span> pr, <span class="Type">int</span> pw) {
+        <span class="Statement">this</span>-&gt;pr = pr;
+        <span class="Type">int</span> k = <span class="Constant">0</span>; <span class="Statement">while</span> ((<span class="Constant">1</span> &lt;&lt; k) &lt; MAXF) k++;
+        bitrev[<span class="Constant">0</span>] = <span class="Constant">0</span>;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt; MAXF; i++) {
+            bitrev[i] = bitrev[i &gt;&gt; <span class="Constant">1</span>] &gt;&gt; <span class="Constant">1</span> | ((i &amp; <span class="Constant">1</span>) &lt;&lt; k - <span class="Constant">1</span>);
+        }
+        pw = fpow(pw, (pr - <span class="Constant">1</span>) / MAXF, pr);
+        rts[<span class="Constant">0</span>] = <span class="Constant">1</span>;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt;= MAXF; i++) {
+            rts[i] = (<span class="Type">long</span> <span class="Type">long</span>) rts[i - <span class="Constant">1</span>] * pw % pr;
+        }
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt;= MAXF; i &lt;&lt;= <span class="Constant">1</span>) {
+            iv[i] = fpow(i, pr - <span class="Constant">2</span>, pr);
+        }
+    }
+    <span class="Type">void</span> dft(<span class="Type">int</span> a[], <span class="Type">int</span> n, <span class="Type">int</span> sign) {
+        <span class="Type">int</span> d = <span class="Constant">0</span>; <span class="Statement">while</span> ((<span class="Constant">1</span> &lt;&lt; d) * n != MAXF) d++;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) {
+            <span class="Statement">if</span> (i &lt; (bitrev[i] &gt;&gt; d)) {
+                swap(a[i], a[bitrev[i] &gt;&gt; d]);
+            }
+        }
+        <span class="Statement">for</span> (<span class="Type">int</span> len = <span class="Constant">2</span>; len &lt;= n; len &lt;&lt;= <span class="Constant">1</span>) {
+            <span class="Type">int</span> delta = MAXF / len * sign;
+            <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i += len) {
+                <span class="Type">int</span> *w = sign &gt; <span class="Constant">0</span> ? rts : rts + MAXF;
+                <span class="Statement">for</span> (<span class="Type">int</span> k = <span class="Constant">0</span>; k + k &lt; len; k++) {
+                    <span class="Type">int</span> &amp;a1 = a[i + k + (len &gt;&gt; <span class="Constant">1</span>)], &amp;a2 = a[i + k];
+                    <span class="Type">int</span> t = (<span class="Type">long</span> <span class="Type">long</span>) *w * a1 % pr;
+                    a1 = a2 - t;
+                    a2 = a2 + t;
+                    a1 += a1 &lt; <span class="Constant">0</span> ? pr : <span class="Constant">0</span>;
+                    a2 -= a2 &gt;= pr ? pr : <span class="Constant">0</span>;
+                    w += delta;
+                }
+            }
+        }
+        <span class="Statement">if</span> (sign &lt; <span class="Constant">0</span>) {
+            <span class="Type">int</span> in = iv[n];
+            <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) {
+                a[i] = (<span class="Type">long</span> <span class="Type">long</span>) a[i] * in % pr;
+            }
+        }
+    }
+    <span class="Type">void</span> multiply(<span class="Type">int</span> a[], <span class="Type">int</span> b[], <span class="Type">int</span> na, <span class="Type">int</span> nb, <span class="Type">int</span> c[]) {
+        <span class="Type">static</span> <span class="Type">int</span> fa[MAXF], fb[MAXF];
+        <span class="Type">int</span> n = na + nb - <span class="Constant">1</span>; <span class="Statement">while</span> (n != (n &amp; -n)) n += n &amp; -n;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) fa[i] = fb[i] = <span class="Constant">0</span>;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; na; i++) fa[i] = a[i];
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; nb; i++) fb[i] = b[i];
+        dft(fa, n, <span class="Constant">1</span>), dft(fb, n, <span class="Constant">1</span>);
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) fa[i] = (<span class="Type">long</span> <span class="Type">long</span>) fa[i] * fb[i] % pr;
+        dft(fa, n, -<span class="Constant">1</span>);
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) c[i] = fa[i];
+    }
+    vector&lt;<span class="Type">int</span>&gt; multiply(vector&lt;<span class="Type">int</span>&gt; a, vector&lt;<span class="Type">int</span>&gt; b) {
+        <span class="Type">static</span> <span class="Type">int</span> fa[MAXF], fb[MAXF], fc[MAXF];
+        <span class="Type">int</span> na = a.size(), nb = b.size();
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; na; i++) fa[i] = a[i];
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; nb; i++) fb[i] = b[i];
+        multiply(fa, fb, na, nb, fc);
+        <span class="Type">int</span> k = na + nb - <span class="Constant">1</span>;
+        vector&lt;<span class="Type">int</span>&gt; res(k);
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; k; i++) res[i] = fc[i];
+        <span class="Statement">return</span> res;
+    }
+} ntt;
+
+<span class="Type">int</span> main(<span class="Type">int</span> argc, <span class="Type">char</span>* argv[]) {
+    ios_base::sync_with_stdio(<span class="Constant">0</span>), cin.tie(<span class="Constant">0</span>);
+    vector&lt;<span class="Type">int</span>&gt; A = {<span class="Constant">1</span>, <span class="Constant">1</span>, <span class="Constant">2</span>};
+    vector&lt;<span class="Type">int</span>&gt; B = {<span class="Constant">9</span>, <span class="Constant">1</span>, <span class="Constant">3</span>};
+    ntt.init(MOD, <span class="Constant">3</span>);
+    vector&lt;<span class="Type">int</span>&gt; rez = ntt.multiply(A, B);
+    <span class="Statement">for</span> (<span class="Type">int</span> x : rez) {
+        cout &lt;&lt; x &lt;&lt; <span class="Constant">&quot; &quot;</span>;
+    }
+}
+
+========== FFTSolver ==========
+
+<span class="Type">namespace</span> FFTSolver {
+	<span class="Type">typedef</span> <span class="Type">complex</span>&lt;ld&gt; plex;
+
+	vector&lt;vector&lt;plex&gt;&gt; W;
+
+	<span class="Type">int</span> __get_log(<span class="Type">int</span> N) {
+		<span class="Statement">return</span> <span class="Constant">31</span> - __builtin_clz(N);
+	}
+
+	<span class="Type">void</span> construct_roots(<span class="Type">int</span> N) {
+		<span class="Type">int</span> n = __get_log(N);
+		<span class="Statement">while</span> (len(W) &lt; n) {
+			<span class="Type">int</span> layer_log = len(W);
+			<span class="Type">int</span> k = (<span class="Constant">1</span> &lt;&lt; layer_log);
+			W.pb(vector&lt;plex&gt;());
+			W.back().resize(k);
+			<span class="Statement">for</span> (<span class="Type">int</span> j = <span class="Constant">0</span>; j &lt; k; j++) {
+				W.back()[j] = (plex(cos((<span class="Constant">2</span> * <span class="Constant">M_PI</span> * (ld)j) / (ld)(<span class="Constant">2</span> * k)), sin((<span class="Constant">2</span> * <span class="Constant">M_PI</span> * (ld)j) / (ld)(<span class="Constant">2</span> * k))));
+			}
+		}
+	}
+
+	<span class="Type">void</span> __fft(plex *a, <span class="Type">int</span> N, plex e, <span class="Type">bool</span> inv) {
+		<span class="Statement">for</span> (<span class="Type">int</span> k = <span class="Constant">1</span>, id = <span class="Constant">0</span>; k &lt; N; k *= <span class="Constant">2</span>, id++) {
+			<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; N; i += k * <span class="Constant">2</span>) {
+				<span class="Statement">for</span> (<span class="Type">int</span> j = <span class="Constant">0</span>; j &lt; k; j++) {
+					<span class="Statement">if</span> (!inv) {
+						plex x = a[i + j], y = a[i + j + k];
+						a[i + j] = x + W[id][j] * y;
+						a[i + j + k] = x - W[id][j] * y;
+					} <span class="Statement">else</span> {
+						plex x = a[i + j], y = a[i + j + k];
+						a[i + j] = x + conj(W[id][j]) * y;
+						a[i + j + k] = x - conj(W[id][j]) * y;
+					}
+				}
+			}
+		}
+	}
+
+	<span class="Type">template</span> &lt;<span class="Type">class</span> T&gt;
+	<span class="Type">void</span> reverse_permutation(T *a, <span class="Type">int</span> N) {
+		<span class="Type">int</span> N_2 = (N &gt;&gt; <span class="Constant">1</span>), r = <span class="Constant">0</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> x = <span class="Constant">1</span>; x &lt; N; ++ x) {
+			<span class="Type">int</span> h = N_2;
+			<span class="Statement">while</span> (((r ^= h) &amp; h) == <span class="Constant">0</span>) h &gt;&gt;= <span class="Constant">1</span>;
+			<span class="Statement">if</span> (r &gt; x) swap(a[x], a[r]);
+		}
+	}
+
+	<span class="Type">void</span> complex_convolution(plex *a, <span class="Type">int</span> N, <span class="Type">bool</span> inv) {
+		reverse_permutation(a, N);
+		construct_roots(N);
+		plex e(cos(<span class="Constant">2.0</span> * <span class="Constant">M_PI</span> / (ld)N), sin(<span class="Constant">2.0</span> * <span class="Constant">M_PI</span> / (ld)N));
+		<span class="Statement">if</span> (inv) e = conj(e);
+		__fft(a, N, e, inv);
+	}
+
+	<span class="Type">void</span> transform_2_convolutions(plex *a, <span class="Type">int</span> N) {
+		plex div_x = plex(<span class="Constant">0</span>, <span class="Constant">1</span>) * (<span class="Constant">4.0</span> * N);
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; N / <span class="Constant">2</span>; i++) {
+			<span class="Type">int</span> j = (N - i) % N;
+			a[i] = (a[i] + conj(a[j])) * (a[i] - conj(a[j])) / div_x;
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> i = N - <span class="Constant">1</span>; i &gt; N / <span class="Constant">2</span>; i--) {
+			a[i] = conj(a[N - i]);
+		}
+		a[N / <span class="Constant">2</span>] = (a[N / <span class="Constant">2</span>] + conj(a[N / <span class="Constant">2</span>])) * (a[N / <span class="Constant">2</span>] - conj(a[N / <span class="Constant">2</span>])) / div_x;
+	}
+
+	<span class="Type">inline</span> vector&lt;ll&gt; multiply(<span class="Type">const</span> vector&lt;ll&gt; &amp;a, <span class="Type">const</span> vector&lt;ll&gt; &amp;b) {
+		<span class="Type">int</span> N = len(a) + len(b) + <span class="Constant">1</span>;
+		<span class="Statement">while</span> (__builtin_popcount(N) != <span class="Constant">1</span>) {
+			N++;
+		}
+
+		plex e(cos(<span class="Constant">2</span> * <span class="Constant">M_PI</span> / (ld)N), sin(<span class="Constant">2</span> * <span class="Constant">M_PI</span> / (ld)N));
+
+		vector&lt;plex&gt; mvp(N);
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; N; i++) {
+			<span class="Statement">if</span> (i &lt; len(a)) {
+				mvp[i].real(a[i]);
+			}
+			<span class="Statement">if</span> (i &lt; len(b)) {
+				mvp[i].imag(b[i]);
+			}
+		}
+
+		complex_convolution(mvp.data(), N, <span class="Constant">false</span>);
+		transform_2_convolutions(mvp.data(), N);
+		complex_convolution(mvp.data(), N, <span class="Constant">true</span>);
+
+
+		vector&lt;ll&gt; <span class="Type">final</span>(N);
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; N; i++) {
+			<span class="Type">final</span>[i] = round(real(mvp[i]));
+		}
+
+		<span class="Statement">return</span> <span class="Type">final</span>;
+	}
+
+	<span class="Type">template</span>&lt;<span class="Type">class</span> T&gt;
+	<span class="Type">inline</span> vector&lt;T&gt; multiply_high_precision(vector&lt;ll&gt; a, vector&lt;ll&gt; b) {
+		<span class="Type">int</span> N = max(len(a), len(b));
+		a.resize(N, <span class="Constant">0</span>);
+		b.resize(N, <span class="Constant">0</span>);
+		vector&lt;ll&gt; A = a;
+		vector&lt;ll&gt; B = b;
+		ll C = <span class="Constant">0</span>;
+		f(i, N) {
+			C = max(C, abs(a[i]));
+			C = max(C, abs(b[i]));
+		}
+		C = sqrt(C);
+		f(i, N) {
+			A[i] /= C;
+			B[i] /= C;
+			a[i] %= C;
+			b[i] %= C;
+		}
+		vector&lt;ll&gt; high = multiply(A, B);
+		vector&lt;ll&gt; Ab = multiply(A, b);
+		vector&lt;ll&gt; Ba = multiply(B, a);
+		vector&lt;ll&gt; ab = multiply(a, b);
+		vector&lt;T&gt; gl(len(high));
+
+		T _C(C);
+
+		f(i, len(gl)) {
+			gl[i] = _C * _C * T(high[i]) + _C * (T(Ab[i]) + T(Ba[i])) + T(ab[i]);
+		}
+		<span class="Statement">return</span> gl;
+	}
+};
+
+========== Berleykamp ==========
+
+<span class="Type">const</span> ll MOD = <span class="Constant">1e9</span> + <span class="Constant">7</span>;
+<span class="Type">template</span>&lt;ll MOD&gt;
+<span class="Type">struct</span> Ring {
+	ll value = <span class="Constant">0</span>;
+	Ring() {}
+	Ring(<span class="Type">int</span> _value) {
+		value = _value;
+		value = floor_mod(value, MOD);
+	}
+	Ring(ll _value) {
+		value = _value;
+		value = floor_mod(value, MOD);
+	}
+	Ring pow(ll p) <span class="Type">const</span> {
+		<span class="Statement">if</span> (p == <span class="Constant">0</span>) <span class="Statement">return</span> <span class="Constant">1</span>;
+		<span class="Statement">if</span> (p &amp; <span class="Constant">1</span>) {
+			<span class="Statement">return</span> Ring(value).pow(p - <span class="Constant">1</span>) * value;
+		} <span class="Statement">else</span> {
+			Ring sub = Ring(value).pow(p / <span class="Constant">2</span>);
+			<span class="Statement">return</span> sub * sub;
+		}
+	}
+	Ring inv() <span class="Type">const</span> {
+		<span class="Statement">return</span> pow(MOD - <span class="Constant">2</span>);
+	}
+	<span class="Type">void</span> <span class="Statement">operator</span>*=(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		value *= b.value;
+		value = floor_mod(value, MOD);
+	}
+	<span class="Statement">friend</span> Ring <span class="Statement">operator</span>*(Ring&lt;MOD&gt; a, <span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		a *= b;
+		<span class="Statement">return</span> a;
+	}
+	<span class="Type">void</span> <span class="Statement">operator</span>+=(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		value += b.value;
+		value = floor_mod(value, MOD);
+	}
+	<span class="Statement">friend</span> Ring <span class="Statement">operator</span>+(Ring a, <span class="Type">const</span> Ring &amp;b) {
+		a += b;
+		<span class="Statement">return</span> a;
+	}
+	<span class="Type">void</span> <span class="Statement">operator</span>-=(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		value -= b.value;
+		value = floor_mod(value, MOD);
+	}
+	<span class="Statement">friend</span> Ring <span class="Statement">operator</span>-(Ring a, <span class="Type">const</span> Ring &amp;b) {
+		a -= b;
+		<span class="Statement">return</span> a;
+	}
+	<span class="Type">void</span> <span class="Statement">operator</span>/=(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		(*<span class="Statement">this</span>) *= b.inv();
+	}
+	<span class="Statement">friend</span> Ring <span class="Statement">operator</span>/(Ring a, <span class="Type">const</span> Ring &amp;b) {
+		a /= b;
+		<span class="Statement">return</span> a;
+	}
+	<span class="Type">bool</span> <span class="Statement">operator</span>==(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		<span class="Statement">return</span> value == b.value;
+	}
+	<span class="Statement">friend</span> <span class="Type">void</span> fast_print(<span class="Type">const</span> Ring&lt;MOD&gt; &amp;b) {
+		fast_print(b.value);
+	}
+};
+
+<span class="Type">typedef</span> Ring&lt;MOD&gt; num;
+
+
+<span class="Type">template</span>&lt;<span class="Type">class</span> T&gt;
+<span class="Type">struct</span> Berleykamp {
+	vector&lt;T&gt; v;
+	vector&lt;T&gt; rec;
+
+	Berleykamp(<span class="Type">const</span> vector&lt;T&gt; &amp;_a) {
+		v = _a;
+		vector&lt;T&gt; cur = {<span class="Constant">1</span>};
+		vector&lt;T&gt; pref = {<span class="Constant">1</span>};
+		T dy = <span class="Constant">1</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; len(v); i++) {
+			T dx = <span class="Constant">0</span>;
+			f(j, len(cur)) {
+				dx += v[i - len(cur) + j + <span class="Constant">1</span>] * cur[j];
+			}
+			<span class="Statement">if</span> (dx == (T)<span class="Constant">0</span>) {
+				pref.pb(<span class="Constant">0</span>);
+			} <span class="Statement">else</span> {
+				pref.pb(<span class="Constant">0</span>);
+				vector&lt;T&gt; _new = cur;
+				<span class="Statement">while</span> (len(_new) &lt; len(pref)) {
+					_new.insert(_new.begin(), <span class="Constant">0</span>);
+				}
+				f(j, len(pref)) {
+					_new[len(_new) - len(pref) + j] -= pref[j] * (dx / dy);
+				}
+				pref = cur;
+				cur = _new;
+				dy = dx;
+			}
+		}
+		rec = cur;
+	}
+
+	T interpolate(<span class="Type">int</span> n) {
+		<span class="Statement">if</span> (n &lt; len(v)) <span class="Statement">return</span> v[n];
+		T rez = <span class="Constant">0</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; len(rec) - <span class="Constant">1</span>; i++) {
+			rez -= interpolate(n - len(rec) + i + <span class="Constant">1</span>) * rec[i];
+		}
+		assert(len(v) == n);
+		v.pb(n);
+		<span class="Statement">return</span> v[n] = rez;
+	}
+
+	vector&lt;T&gt; mod(vector&lt;T&gt; a, vector&lt;T&gt; b) {
+		<span class="Statement">while</span> (!b.empty() &amp;&amp; b.back() == <span class="Constant">0</span>) {
+			b.pop_back();
+		}
+		<span class="Statement">while</span> (len(a) &gt;= len(b)) {
+			<span class="Statement">while</span> (!a.empty() &amp;&amp; a.back() == <span class="Constant">0</span>) {
+				a.pop_back();
+			}
+			<span class="Statement">if</span> (len(a) &lt; len(b)) <span class="Statement">return</span> a;
+
+			T factor = a.back() / b.back();
+
+			f(i, len(b)) {
+				a[len(a) - len(b) + i] -= b[i] * factor;
+			}
+		}
+		<span class="Statement">return</span> a;
+	}
+
+	vector&lt;T&gt; mul(vector&lt;T&gt; a, vector&lt;T&gt; b) {
+		vector&lt;T&gt; c(len(a) + len(b));
+		f(i, len(a)) {
+			f(j, len(b)) {
+				c[i + j] += a[i] * b[j];
+			}
+		}
+		<span class="Statement">return</span> c;
+	}
+
+	vector&lt;T&gt; fast_pow(vector&lt;T&gt; x, vector&lt;T&gt; M, <span class="Type">int</span> p) {
+		<span class="Statement">if</span> (p == <span class="Constant">0</span>) <span class="Statement">return</span> {T(<span class="Constant">1</span>)};
+		<span class="Statement">if</span> (p &amp; <span class="Constant">1</span>) {
+			<span class="Statement">return</span> mod(mul(fast_pow(x, M, p - <span class="Constant">1</span>), x), M);
+		} <span class="Statement">else</span> {
+			vector&lt;T&gt; sub = fast_pow(x, M, p / <span class="Constant">2</span>);
+			<span class="Statement">return</span> mod(mul(sub, sub), M);
+		}
+	}
+
+	T interpolate__fast(<span class="Type">int</span> n) {
+		vector&lt;T&gt; x = {<span class="Constant">0</span>, <span class="Constant">1</span>};
+		x = fast_pow(x, rec, n);
+		T <span class="Type">final</span> = <span class="Constant">0</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; len(x); i++) {
+			<span class="Type">final</span> += x[i] * interpolate(i);
+		}
+		<span class="Statement">return</span> <span class="Type">final</span>;
+	}
+};
+
+
+========== HungarianDance ==========
+
+<span class="Type">struct</span> Dance {
+	<span class="Type">int</span> n, m;
+	vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; v;
+	vector&lt;<span class="Type">int</span>&gt; rez;
+	vector&lt;<span class="Type">int</span>&gt; row, col;
+	vector&lt;<span class="Type">bool</span>&gt; srow, scol;
+	vector&lt;<span class="Type">int</span>&gt; min_value, min_pos;
+	vector&lt;pii&gt; invoker;
+
+	Dance(vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; _v) {
+		v = _v;
+		n = len(v);
+		m = len(v[<span class="Constant">0</span>]);
+
+		row.resize(n, <span class="Constant">0</span>);
+		col.resize(m, <span class="Constant">0</span>);
+		rez.resize(m, -<span class="Constant">1</span>);
+	}
+
+	<span class="Type">int</span> get(<span class="Type">int</span> i, <span class="Type">int</span> j) {
+		<span class="Statement">return</span> v[i][j] + row[i] + col[j];
+	}
+
+	pair&lt;vector&lt;<span class="Type">int</span>&gt;, <span class="Type">int</span>&gt; match() {
+		f(cur, n) {
+			min_value = vector&lt;<span class="Type">int</span>&gt;(m, <span class="Constant">1e9</span>);
+			min_pos = vector&lt;<span class="Type">int</span>&gt;(m, -<span class="Constant">1</span>);
+			invoker = vector&lt;pii&gt;(n, mp(-<span class="Constant">1</span>, -<span class="Constant">1</span>));
+			srow = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			scol = vector&lt;<span class="Type">bool</span>&gt;(m, <span class="Constant">false</span>);
+
+			<span class="Type">int</span> next = cur;
+			<span class="Statement">while</span> (<span class="Constant">true</span>) {
+				srow[next] = <span class="Constant">true</span>;
+				f(j, m) {
+					<span class="Statement">if</span> (get(next, j) &lt; min_value[j]) {
+						min_value[j] = get(next, j);
+						min_pos[j] = next;
+					}
+				}
+
+				pii _min = mp(-<span class="Constant">1</span>, -<span class="Constant">1</span>);
+				f(j, m) {
+					<span class="Statement">if</span> (scol[j]) <span class="Statement">continue</span>;
+					<span class="Statement">if</span> (_min.x == -<span class="Constant">1</span> || get(_min.x, _min.y) &gt; min_value[j]) {
+						_min = mp(min_pos[j], j);
+					}
+				}
+
+				assert(_min != mp(-<span class="Constant">1</span>, -<span class="Constant">1</span>));
+
+				<span class="Type">int</span> d = get(_min.x, _min.y);
+
+				f(i, n) {
+					<span class="Statement">if</span> (srow[i]) {
+						row[i] -= d;
+					}
+				}
+				f(j, m) {
+					<span class="Statement">if</span> (scol[j]) {
+						col[j] += d;
+					}
+				}
+				f(j, m) {
+					min_value[j] -= d;
+				}
+				<span class="Statement">if</span> (rez[_min.y] == -<span class="Constant">1</span>) {
+					<span class="Type">int</span> ind = _min.y;
+					<span class="Type">int</span> p = _min.x;
+					<span class="Statement">while</span> (ind != -<span class="Constant">1</span>) {
+						rez[ind] = p;
+						ind = invoker[p].y;
+						p = invoker[p].x;
+					}
+					<span class="Statement">break</span>;
+				} <span class="Statement">else</span> {
+					scol[_min.y] = <span class="Constant">true</span>;
+					invoker[rez[_min.y]] = mp(_min.x, _min.y);
+					next = rez[_min.y];
+				}
+			}
+		}
+		<span class="Type">int</span> total = <span class="Constant">0</span>;
+		f(i, m) {
+			total += v[rez[i]][i];
+		}
+		<span class="Statement">return</span> mp(rez, total);
+	}
+};
+
+
+========== Auto ==========
+
+vector&lt;<span class="Type">int</span>&gt; suffix_array(<span class="Type">const</span> string &amp;s) {
+    <span class="Type">int</span> n = s.size(), N = max(n, <span class="Constant">257</span>);
+    vector&lt;<span class="Type">int</span>&gt; sa(n), ra(n);
+    <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) sa[i] = i, ra[i] = s[i];
+    <span class="Statement">for</span> (<span class="Type">int</span> k = <span class="Constant">0</span>; k &lt; n; k ? k &lt;&lt;= <span class="Constant">1</span> : k++) {
+        vector&lt;<span class="Type">int</span>&gt; nsa(sa), nra(n), cnt(N);
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; ++i) nsa[i] -= k - (nsa[i] &lt; k ? n : <span class="Constant">0</span>);
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; ++i) cnt[ra[i]]++;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt; N; ++i) cnt[i] += cnt[i - <span class="Constant">1</span>];
+        <span class="Statement">for</span> (<span class="Type">int</span> i = n - <span class="Constant">1</span>; i &gt;= <span class="Constant">0</span>; --i) sa[--cnt[ra[nsa[i]]]] = nsa[i];
+        <span class="Type">int</span> r = <span class="Constant">0</span>;
+        <span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt; n; ++i) {
+            <span class="Statement">if</span> (ra[sa[i]] != ra[sa[i - <span class="Constant">1</span>]]) r++;
+            <span class="Statement">else</span> <span class="Statement">if</span> (ra[(sa[i] + k) % n] != ra[(sa[i - <span class="Constant">1</span>] + k) % n]) r++;
+            nra[sa[i]] = r;
+        }
+        swap(ra, nra);
+    }
+    <span class="Statement">return</span> sa;
+}
+
+<span class="Type">int</span> nodes = <span class="Constant">0</span>;
+
+<span class="Type">struct</span> Auto {
+	<span class="Type">struct</span> Node {
+		map&lt;<span class="Type">char</span>, Node*&gt; go;
+		<span class="Type">int</span> max_len = <span class="Constant">0</span>;
+		Node *sufflink = <span class="Constant">NULL</span>;
+		<span class="Type">int</span> id = <span class="Constant">0</span>;
+
+		Node() {
+			id = nodes++;
+		}
+	};
+
+	Node *clone(Node *node) {
+		Node *cl = <span class="Statement">new</span> Node();
+		cl-&gt;go = node-&gt;go;
+		cl-&gt;max_len = node-&gt;max_len;
+		cl-&gt;sufflink = node-&gt;sufflink;
+		<span class="Statement">return</span> cl;
+	}
+
+	Node *root = <span class="Statement">new</span> Node();
+	Node *cur = <span class="Constant">NULL</span>;
+
+	Auto() {
+		cur = root;
+	}
+
+	<span class="Type">void</span> add(<span class="Type">char</span> c) {
+		Node *_new = <span class="Statement">new</span> Node();
+		_new-&gt;max_len = cur-&gt;max_len + <span class="Constant">1</span>;
+		_new-&gt;sufflink = root;
+		<span class="Statement">while</span> (cur &amp;&amp; !cur-&gt;go.count(c)) {
+			cur-&gt;go[c] = _new;
+			cur = cur-&gt;sufflink;
+		}
+		<span class="Statement">if</span> (cur) {
+			<span class="Statement">if</span> (cur-&gt;go[c]-&gt;max_len == cur-&gt;max_len + <span class="Constant">1</span>) {
+				_new-&gt;sufflink = cur-&gt;go[c];
+			} <span class="Statement">else</span> {
+				Node *q = cur-&gt;go[c];
+				Node *p = clone(cur-&gt;go[c]);
+				_new-&gt;sufflink = p;
+				cur-&gt;go[c]-&gt;sufflink = p;
+				p-&gt;max_len = cur-&gt;max_len + <span class="Constant">1</span>;
+
+				<span class="Statement">while</span> (cur) {
+					<span class="Statement">if</span> (cur-&gt;go[c] == q) {
+						cur-&gt;go[c] = p;
+						cur = cur-&gt;sufflink;
+					} <span class="Statement">else</span> {
+						<span class="Statement">break</span>;
+					}
+				}
+			}
+		}
+		cur = _new;
+	}
+
+	<span class="Type">bool</span> check(Node *node, string &amp;s, <span class="Type">int</span> i) {
+		<span class="Statement">if</span> (i &gt;= len(s)) <span class="Statement">return</span> <span class="Constant">true</span>;
+		<span class="Statement">if</span> (!node-&gt;go.count(s[i])) <span class="Statement">return</span> <span class="Constant">false</span>;
+		<span class="Statement">return</span> check(node-&gt;go[s[i]], s, i + <span class="Constant">1</span>);
+	}
+};
+
+========== z_function ==========
+
+vector&lt;<span class="Type">int</span>&gt; z_function (string s) {
+	<span class="Type">int</span> n = (<span class="Type">int</span>) s.length();
+	vector&lt;<span class="Type">int</span>&gt; z (n);
+	<span class="Statement">for</span> (<span class="Type">int</span> i=<span class="Constant">1</span>, l=<span class="Constant">0</span>, r=<span class="Constant">0</span>; i&lt;n; ++i) {
+		<span class="Statement">if</span> (i &lt;= r)
+			z[i] = min (r-i+<span class="Constant">1</span>, z[i-l]);
+		<span class="Statement">while</span> (i+z[i] &lt; n &amp;&amp; s[z[i]] == s[i+z[i]])
+			++z[i];
+		<span class="Statement">if</span> (i+z[i]-<span class="Constant">1</span> &gt; r)
+			l = i,  r = i+z[i]-<span class="Constant">1</span>;
+	}
+	<span class="Statement">return</span> z;
+}
+
+
+========== prefix_function ==========
+
+vector&lt;<span class="Type">int</span>&gt; prefix_function (string s) {
+	<span class="Type">int</span> n = (<span class="Type">int</span>) s.length();
+	vector&lt;<span class="Type">int</span>&gt; pi (n);
+	<span class="Statement">for</span> (<span class="Type">int</span> i=<span class="Constant">1</span>; i&lt;n; ++i) {
+		<span class="Type">int</span> j = pi[i-<span class="Constant">1</span>];
+		<span class="Statement">while</span> (j &gt; <span class="Constant">0</span> &amp;&amp; s[i] != s[j])
+			j = pi[j-<span class="Constant">1</span>];
+		<span class="Statement">if</span> (s[i] == s[j])  ++j;
+		pi[i] = j;
+	}
+	<span class="Statement">return</span> pi;
+}
+
+========== BipolarDisorder ==========
+
+<span class="Type">struct</span> BipolarDisorder {
+	<span class="Type">int</span> n;
+	vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; g;
+	vector&lt;pii&gt; edges;
+	vector&lt;<span class="Type">int</span>&gt; uptime;
+	vector&lt;<span class="Type">int</span>&gt; tin;
+	vector&lt;<span class="Type">bool</span>&gt; used;
+	vector&lt;<span class="Type">int</span>&gt; buff;
+	vector&lt;<span class="Type">bool</span>&gt; pick;
+	vector&lt;<span class="Type">int</span>&gt; order;
+
+	vector&lt;<span class="Type">int</span>&gt; at;
+
+	<span class="Type">int</span> timer = <span class="Constant">0</span>;
+
+	<span class="Type">void</span> init_time(<span class="Type">int</span> v) {
+		used[v] = <span class="Constant">true</span>;
+		at[timer] = v;
+		tin[v] = uptime[v] = timer++;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (used[sub]) <span class="Statement">continue</span>;
+			init_time(sub);
+		}
+	}
+
+	<span class="Type">void</span> check(<span class="Type">int</span> v, <span class="Type">int</span> _forb) {
+		used[v] = <span class="Constant">true</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (used[sub]) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (sub == _forb) <span class="Statement">continue</span>;
+			check(sub, _forb);
+		}
+	}
+	<span class="Type">bool</span> is_critical_slow(<span class="Type">int</span> v) {
+		used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+		<span class="Type">int</span> cnt = <span class="Constant">0</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (used[sub]) <span class="Statement">continue</span>;
+			cnt++;
+			check(sub, v);
+		}
+		<span class="Statement">return</span> cnt &gt;= <span class="Constant">2</span>;
+	}
+	vector&lt;<span class="Type">bool</span>&gt; crit;
+	<span class="Type">void</span> go(<span class="Type">int</span> v, <span class="Type">int</span> _p) {
+		used[v] = <span class="Constant">true</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (sub == _p) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (used[sub]) {
+				uptime[v] = min(uptime[v], tin[sub]);
+			} <span class="Statement">else</span> {
+				go(sub, v);
+				uptime[v] = min(uptime[v], uptime[sub]);
+				<span class="Statement">if</span> (uptime[sub] &gt;= tin[v]) {
+					crit[v] = <span class="Constant">true</span>;
+				}
+			}
+		}
+	}
+
+	<span class="Type">void</span> update_critical() {
+		tin = vector&lt;<span class="Type">int</span>&gt;(n, <span class="Constant">0</span>);
+		uptime = vector&lt;<span class="Type">int</span>&gt;(n, <span class="Constant">0</span>);
+		used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+		init_time(<span class="Constant">0</span>);
+		crit = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+		used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+		go(<span class="Constant">0</span>, -<span class="Constant">1</span>);
+		crit[<span class="Constant">0</span>] = is_critical_slow(<span class="Constant">0</span>);
+	}
+
+	<span class="Type">int</span> A = -<span class="Constant">1</span>;
+
+	<span class="Type">struct</span> Node {
+		Node *l = <span class="Constant">NULL</span>, *r = <span class="Constant">NULL</span>, *pref = <span class="Constant">NULL</span>;
+		<span class="Type">int</span> prior;
+		<span class="Type">int</span> size = <span class="Constant">1</span>;
+
+		Node() {
+			prior = rng();
+		}
+	};
+
+	<span class="Type">int</span> get_size(Node *node) {
+		<span class="Statement">return</span> node ? node-&gt;size : <span class="Constant">0</span>;
+	}
+
+	<span class="Type">void</span> update(Node *node) {
+		node-&gt;size = get_size(node-&gt;l) + get_size(node-&gt;r) + <span class="Constant">1</span>;
+	}
+
+	Node *merge(Node *l, Node *r) {
+		<span class="Statement">if</span> (!l) <span class="Statement">return</span> r;
+		<span class="Statement">if</span> (!r) <span class="Statement">return</span> l;
+		<span class="Statement">if</span> (l-&gt;prior &gt; r-&gt;prior) {
+			l-&gt;r = merge(l-&gt;r, r);
+			l-&gt;r-&gt;pref = l;
+			update(l);
+			<span class="Statement">return</span> l;
+		} <span class="Statement">else</span> {
+			r-&gt;l = merge(l, r-&gt;l);
+			r-&gt;l-&gt;pref = r;
+			update(r);
+			<span class="Statement">return</span> r;
+		}
+	}
+
+	pair&lt;Node*, Node*&gt; split(Node *node, <span class="Type">int</span> k) {
+		<span class="Statement">if</span> (!node) <span class="Statement">return</span> mp(node, node);
+		<span class="Statement">if</span> (get_size(node-&gt;l) &gt;= k) {
+			<span class="Statement">if</span> (node-&gt;l) node-&gt;l-&gt;pref = <span class="Constant">NULL</span>;
+			<span class="Type">auto</span> t = split(node-&gt;l, k);
+			node-&gt;l = <span class="Constant">NULL</span>;
+			update(node);
+			<span class="Statement">return</span> mp(t.x, merge(t.y, node));
+		} <span class="Statement">else</span> {
+			<span class="Statement">if</span> (node-&gt;r) node-&gt;r-&gt;pref = <span class="Constant">NULL</span>;
+			<span class="Type">auto</span> t = split(node-&gt;r, k - get_size(node-&gt;l) - <span class="Constant">1</span>);
+			node-&gt;r = <span class="Constant">NULL</span>;
+			update(node);
+			<span class="Statement">return</span> mp(merge(node, t.x), t.y);
+		}
+	}
+
+	<span class="Type">int</span> get_id(Node *node) {
+		<span class="Type">int</span> id = get_size(node-&gt;l);
+		<span class="Statement">while</span> (node-&gt;pref) {
+			<span class="Statement">if</span> (node-&gt;pref-&gt;r == node) {
+				id += <span class="Constant">1</span> + get_size(node-&gt;pref-&gt;l);
+			}
+			node = node-&gt;pref;
+		}
+		<span class="Statement">return</span> id;
+	}
+
+	Node *cart = <span class="Constant">NULL</span>;
+
+	vector&lt;Node*&gt; pres;
+
+	<span class="Type">void</span> dfs(<span class="Type">int</span> v, <span class="Type">int</span> _p, <span class="Type">int</span> end) {
+		buff.pb(v);
+		<span class="Statement">if</span> (v == end) {
+			<span class="Statement">for</span> (<span class="Type">int</span> x : buff) {
+				pres[x] = <span class="Statement">new</span> Node();
+				cart = merge(cart, pres[x]);
+				pick[x] = <span class="Constant">true</span>;
+			}
+		}
+		at[timer] = v;
+		uptime[v] = tin[v] = timer++;
+		used[v] = <span class="Constant">true</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (sub == _p) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (used[sub]) {
+				uptime[v] = min(uptime[v], tin[sub]);
+			} <span class="Statement">else</span> {
+				dfs(sub, v, end);
+				uptime[v] = min(uptime[v], uptime[sub]);
+			}
+		}
+		buff.pop_back();
+	}
+
+	<span class="Type">void</span> echo(<span class="Type">int</span> v, <span class="Type">int</span> _p) {
+		used[v] = <span class="Constant">true</span>;
+
+		<span class="Statement">if</span> (!pick[v]) {
+			buff.pb(v);
+		}
+
+		<span class="Type">int</span> B = at[uptime[v]];
+		<span class="Statement">if</span> (!buff.empty() &amp;&amp; pick[B] &amp;&amp; B != A) {
+			<span class="Type">int</span> itA = get_id(pres[A]);
+			<span class="Type">int</span> itB = get_id(pres[B]);
+			<span class="Statement">if</span> (itA &lt; itB) {
+				<span class="Type">auto</span> t = split(cart, itA + <span class="Constant">1</span>);
+				<span class="Statement">for</span> (<span class="Type">int</span> x : buff) {
+					pres[x] = <span class="Statement">new</span> Node();
+					t.x = merge(t.x, pres[x]);
+				}
+				cart = merge(t.x, t.y);
+			} <span class="Statement">else</span> {
+				reverse(buff.begin(), buff.end());
+				<span class="Type">auto</span> t = split(cart, itB + <span class="Constant">1</span>);
+				<span class="Statement">for</span> (<span class="Type">int</span> x : buff) {
+					pres[x] = <span class="Statement">new</span> Node();
+					t.x = merge(t.x, pres[x]);
+				}
+				cart = merge(t.x, t.y);
+			}
+			<span class="Statement">for</span> (<span class="Type">int</span> x : buff) {
+				pick[x] = <span class="Constant">true</span>;
+			}
+			buff.clear();
+		}
+
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (sub == _p) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (used[sub]) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (pick[v]) {
+				A = v;
+			}
+			echo(sub, v);
+		}
+	}
+
+	set&lt;<span class="Type">int</span>&gt; finded_crit;
+	<span class="Type">void</span> _index(<span class="Type">int</span> v) {
+		used[v] = <span class="Constant">true</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (used[sub]) <span class="Statement">continue</span>;
+			<span class="Statement">if</span> (crit[sub]) {
+				finded_crit.insert(sub);
+			} <span class="Statement">else</span> {
+				_index(sub);
+			}
+		}
+	}
+
+	<span class="Type">void</span> init(<span class="Type">int</span> _n) {
+		n = _n;
+		g.resize(n);
+		at.resize(<span class="Constant">2</span> * n);
+		uptime.resize(n);
+		tin.resize(n);
+		timer = <span class="Constant">0</span>;
+	}
+
+	<span class="Type">void</span> add_edge(<span class="Type">int</span> a, <span class="Type">int</span> b) {
+		g[a].pb(b);
+		g[b].pb(a);
+		edges.emplace_back(a, b);
+	}
+
+	vector&lt;<span class="Type">int</span>&gt; get_priors() {
+		{
+			used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			update_critical();
+			used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			vector&lt;<span class="Type">int</span>&gt; pos;
+			f(i, n) {
+				<span class="Statement">if</span> (crit[i]) <span class="Statement">continue</span>;
+				<span class="Statement">if</span> (!used[i]) {
+					<span class="Statement">if</span> (len(g[i]) == <span class="Constant">1</span>) {
+						pos.pb(i);
+						used[i] = <span class="Constant">true</span>;
+					} <span class="Statement">else</span> {
+						finded_crit.clear();
+						_index(i);
+						<span class="Statement">if</span> (len(finded_crit) &lt;= <span class="Constant">1</span>) {
+							pos.pb(i);
+						}
+					}
+				}
+			}
+			<span class="Statement">if</span> (len(pos) &lt;= <span class="Constant">1</span>) {
+				pos.pb(n - <span class="Constant">1</span>);
+			}
+			<span class="Statement">if</span> (len(pos) != <span class="Constant">2</span>) {
+				<span class="Statement">return</span> {};
+			}
+
+			<span class="Type">int</span> start = pos[<span class="Constant">0</span>];
+			<span class="Type">int</span> end = pos[<span class="Constant">1</span>];
+			shuffle(pos.begin(), pos.end(), rng);
+
+			used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			pick = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			pres.resize(n, <span class="Constant">NULL</span>);
+			timer = <span class="Constant">0</span>;
+			dfs(start, -<span class="Constant">1</span>, end);
+			buff.clear();
+			used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+			echo(start, -<span class="Constant">1</span>);
+			vector&lt;<span class="Type">int</span>&gt; p(n);
+			f(i, n) {
+				<span class="Statement">if</span> (pres[i]) {
+					p[i] = get_id(pres[i]);
+				} <span class="Statement">else</span> {
+					<span class="Statement">return</span> {};
+				}
+			}
+			vector&lt;<span class="Type">int</span>&gt; in(n), out(n);
+			<span class="Statement">for</span> (pii edge : edges) {
+				<span class="Statement">if</span> (p[edge.x] &gt; p[edge.y]) {
+					swap(edge.x, edge.y);
+				}
+				in[edge.y]++;
+				out[edge.x]++;
+			}
+			<span class="Type">bool</span> fail = <span class="Constant">false</span>;
+			f(i, n) {
+				<span class="Statement">if</span> (i != start &amp;&amp; in[i] == <span class="Constant">0</span>) {
+					fail = <span class="Constant">true</span>;
+				}
+				<span class="Statement">if</span> (i != end &amp;&amp; out[i] == <span class="Constant">0</span>) {
+					fail = <span class="Constant">true</span>;
+				}
+			}
+			<span class="Statement">if</span> (!fail) {
+				<span class="Statement">return</span> p;
+			} <span class="Statement">else</span> {
+				<span class="Statement">return</span> {};
+			}
+		}
+	}
+};
+
+
+========== MaxMatch ==========
+
+<span class="Type">struct</span> MaxMatch {
+	vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; g;
+	vector&lt;<span class="Type">int</span>&gt; match;
+	vector&lt;<span class="Type">bool</span>&gt; used;
+	vector&lt;<span class="Type">int</span>&gt; p;
+
+	MaxMatch(<span class="Type">int</span> n) {
+		g.resize(n);
+		match.resize(n, -<span class="Constant">1</span>);
+		p.resize(n);
+		f(i, n) {
+			p[i] = i;
+		}
+	}
+
+	<span class="Type">void</span> add_edge(<span class="Type">int</span> a, <span class="Type">int</span> b) {
+		g[a].pb(b);
+		g[b].pb(a);
+	}
+
+	<span class="Type">bool</span> dfs(<span class="Type">int</span> v) {
+		used[v] = <span class="Constant">true</span>;
+		shuffle(g[v].begin(), g[v].end(), rng);
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Statement">if</span> (match[sub] == -<span class="Constant">1</span>) {
+				match[v] = sub;
+				match[sub] = v;
+				<span class="Statement">return</span> <span class="Constant">true</span>;
+			}
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+			<span class="Type">int</span> __t = match[sub];
+			assert(__t != -<span class="Constant">1</span>);
+			<span class="Statement">if</span> (used[__t]) <span class="Statement">continue</span>;
+			match[__t] = -<span class="Constant">1</span>;
+			match[sub] = v;
+			match[v] = sub;
+			<span class="Statement">if</span> (dfs(__t)) {
+				<span class="Statement">return</span> <span class="Constant">true</span>;
+			} <span class="Statement">else</span> {
+				match[sub] = __t;
+				match[__t] = sub;
+				match[v] = -<span class="Constant">1</span>;
+			}
+		}
+		<span class="Statement">return</span> <span class="Constant">false</span>;
+	}
+
+	<span class="Type">void</span> upgrade() {
+		shuffle(p.begin(), p.end(), rng);
+		used = vector&lt;<span class="Type">bool</span>&gt;(len(g), <span class="Constant">false</span>);
+		<span class="Statement">for</span> (<span class="Type">int</span> i : p) {
+			<span class="Statement">if</span> (match[i] == -<span class="Constant">1</span> &amp;&amp; !used[i]) {
+				dfs(i);
+			}
+		}
+	}
+
+	vector&lt;pii&gt; edges() {
+		vector&lt;pii&gt; rez;
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; len(g); i++) {
+			<span class="Statement">if</span> (match[i] != -<span class="Constant">1</span> &amp;&amp; i &lt; match[i]) {
+				rez.emplace_back(i, match[i]);
+			}
+		}
+		<span class="Statement">return</span> rez;
+	}
+};
+
+========== MaxMatchWithoutEachVertex ==========
+
+<span class="Type">struct</span> DTree {
+	<span class="Type">int</span> n;
+	vector&lt;<span class="Type">int</span>&gt; parent, label, real;
+	<span class="Type">int</span> cnt = <span class="Constant">0</span>;
+	vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; edge, succ, pred;
+	vector&lt;<span class="Type">int</span>&gt; semi, idom, ancestor, best;
+	vector&lt;deque&lt;<span class="Type">int</span>&gt;&gt; bucket;
+
+	vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; tree;
+
+	<span class="Type">void</span> add_edge(<span class="Type">int</span> a, <span class="Type">int</span> b) {
+		edge[a + <span class="Constant">1</span>].pb(b + <span class="Constant">1</span>);
+	}
+
+	DTree(<span class="Type">int</span> _n) {
+		n = _n;
+		parent.resize(n + <span class="Constant">1</span>);
+		label.resize(n + <span class="Constant">1</span>);
+		real.resize(n + <span class="Constant">1</span>);
+		tree.resize(n + <span class="Constant">1</span>);
+		edge.resize(n + <span class="Constant">1</span>);
+		succ.resize(n + <span class="Constant">1</span>);
+		pred.resize(n + <span class="Constant">1</span>);
+		semi.resize(n + <span class="Constant">1</span>);
+		idom.resize(n + <span class="Constant">1</span>);
+		ancestor.resize(n + <span class="Constant">1</span>);
+		best.resize(n + <span class="Constant">1</span>);
+		bucket.resize(n + <span class="Constant">1</span>);
+	}
+
+	<span class="Type">void</span> dfs(<span class="Type">int</span> u) {
+		label[u] = ++cnt; real[cnt] = u;
+		<span class="Statement">for</span> (vector&lt;<span class="Type">int</span>&gt;::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
+			<span class="Type">int</span> v = *it;
+			<span class="Statement">if</span> (v == parent[u] || label[v] != -<span class="Constant">1</span>) <span class="Statement">continue</span>;
+			parent[v] = u;
+			dfs(v);
+		}
+	}
+
+	<span class="Type">void</span> link(<span class="Type">int</span> v, <span class="Type">int</span> w) {
+		ancestor[w] = v;
+	}
+
+	<span class="Type">void</span> compress(<span class="Type">int</span> v) {
+		<span class="Type">int</span> a = ancestor[v];
+		<span class="Statement">if</span> (ancestor[a] == <span class="Constant">0</span>) <span class="Statement">return</span>;
+		compress(a);
+		<span class="Statement">if</span> (semi[best[v]] &gt; semi[best[a]]) best[v] = best[a];
+		ancestor[v] = ancestor[a];
+	}
+
+	<span class="Type">int</span> eval(<span class="Type">int</span> v) {
+		<span class="Statement">if</span> (ancestor[v] == <span class="Constant">0</span>) <span class="Statement">return</span> v;
+		compress(v);
+		<span class="Statement">return</span> best[v];
+	}
+
+	<span class="Type">void</span> dominator() { <span class="Comment">// clear succ &amp; pred, let cnt = 0 first</span>
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt;= n; ++i) label[i] = -<span class="Constant">1</span>;
+		dfs(n); <span class="Comment">// n is root</span>
+		<span class="Statement">for</span> (<span class="Type">int</span> u = <span class="Constant">1</span>; u &lt;= n; ++u) {
+			<span class="Statement">for</span> (vector&lt;<span class="Type">int</span>&gt;::iterator it = edge[u].begin(); it != edge[u].end(); ++it) {
+				<span class="Type">int</span> v = *it;
+				<span class="Statement">if</span> (label[u] != -<span class="Constant">1</span> &amp;&amp; label[v] != -<span class="Constant">1</span>) {
+					succ[label[u]].push_back(label[v]);
+					pred[label[v]].push_back(label[u]);
+				}
+			}
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt;= n; ++i) {
+			semi[i] = best[i] = i;
+			idom[i] = ancestor[i] = <span class="Constant">0</span>;
+			bucket[i].clear();
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> w = cnt; w &gt;= <span class="Constant">2</span>; --w) {
+			<span class="Type">int</span> p = label[parent[real[w]]];
+			<span class="Statement">for</span> (vector&lt;<span class="Type">int</span>&gt;::iterator it = pred[w].begin(); it != pred[w].end(); ++it) {
+				<span class="Type">int</span> v = *it;
+				<span class="Type">int</span> u = eval(v);
+				<span class="Statement">if</span> (semi[w] &gt; semi[u]) semi[w] = semi[u];
+			}
+			bucket[semi[w]].push_back(w);
+			link(p, w);
+			<span class="Statement">while</span> (!bucket[p].empty()) {
+				<span class="Type">int</span> v = bucket[p].front();
+				bucket[p].pop_front();
+				<span class="Type">int</span> u = eval(v);
+				idom[v] = (semi[u] &lt; p ? u : p);
+			}
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> w = <span class="Constant">2</span>; w &lt;= cnt; ++w) {
+			<span class="Statement">if</span> (idom[w] != semi[w]) idom[w] = idom[idom[w]];
+		}
+		idom[<span class="Constant">1</span>] = <span class="Constant">0</span>;
+		<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt;= cnt; ++i) {
+			<span class="Type">int</span> u = real[idom[i]], v = real[i];
+			<span class="Comment">// u is immediate dominator of v (i == 1?)</span>
+			<span class="Comment">// print u - 1, v - 1;</span>
+		}
+	}
+};
+
+<span class="Type">int</span> n, m;
+
+vector&lt;vector&lt;<span class="Type">int</span>&gt;&gt; g;
+vector&lt;<span class="Type">bool</span>&gt; used;
+vector&lt;<span class="Type">bool</span>&gt; R;
+vector&lt;<span class="Type">int</span>&gt; rez;
+
+<span class="Type">bool</span> ktun(<span class="Type">int</span> v) {
+	used[v] = <span class="Constant">true</span>;
+	<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+		<span class="Statement">if</span> (rez[sub] == -<span class="Constant">1</span>) {
+			rez[sub] = v;
+			<span class="Statement">return</span> <span class="Constant">true</span>;
+		}
+	}
+	<span class="Statement">for</span> (<span class="Type">int</span> sub : g[v]) {
+		<span class="Statement">if</span> (used[rez[sub]]) <span class="Statement">continue</span>;
+		R[sub] = <span class="Constant">true</span>;
+		<span class="Statement">if</span> (ktun(rez[sub])) {
+			rez[sub] = v;
+			<span class="Statement">return</span> <span class="Constant">true</span>;
+		}
+	}
+	<span class="Statement">return</span> <span class="Constant">false</span>;
+}
+
+pair&lt;<span class="Type">int</span>, vector&lt;<span class="Type">bool</span>&gt;&gt; match(vector&lt;pii&gt; edges) {
+	g.clear();
+	R.clear();
+	rez.clear();
+	rez.resize(n, -<span class="Constant">1</span>);
+	g.resize(n);
+	R.resize(n);
+	<span class="Statement">for</span> (pii e : edges) {
+		g[e.x].pb(e.y);
+	}
+	used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+	f(i, n) {
+		<span class="Statement">if</span> (ktun(i)) {
+			used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+		}
+	}
+	DTree tree(<span class="Constant">2</span> * n + <span class="Constant">1</span>);
+	f(i, n) {
+		<span class="Statement">for</span> (<span class="Type">int</span> sub : g[i]) {
+			<span class="Statement">if</span> (rez[sub] == i) {
+				tree.add_edge(sub + n, i);
+			} <span class="Statement">else</span> {
+				tree.add_edge(i, sub + n);
+			}
+		}
+	}
+	vector&lt;<span class="Type">bool</span>&gt; L(n);
+	f(i, n) {
+		<span class="Statement">if</span> (rez[i] != -<span class="Constant">1</span>) {
+			L[rez[i]] = <span class="Constant">true</span>;
+		}
+	}
+	R = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+	used = vector&lt;<span class="Type">bool</span>&gt;(n, <span class="Constant">false</span>);
+	f(i, n) {
+		<span class="Statement">if</span> (!L[i]) {
+			tree.add_edge(<span class="Constant">2</span> * n, i);
+			ktun(i);
+		}
+	}
+	tree.dominator();
+	vector&lt;<span class="Type">bool</span>&gt; can_del(n, <span class="Constant">false</span>);
+	f(i, n) {
+		<span class="Statement">if</span> (!L[i]) {
+			can_del[i] = <span class="Constant">true</span>;
+		}
+	}
+	f(i, n) {
+		<span class="Statement">if</span> (rez[i] == -<span class="Constant">1</span>) {
+		} <span class="Statement">else</span> {
+			<span class="Statement">if</span> (R[i]) {
+				<span class="Type">bool</span> found = <span class="Constant">false</span>;
+				<span class="Type">int</span> j = i + n;
+				<span class="Statement">while</span> (j != -<span class="Constant">1</span>) {
+					<span class="Statement">if</span> (j == rez[i]) {
+						found = <span class="Constant">true</span>;
+					}
+					j = tree.parent[j + <span class="Constant">1</span>] - <span class="Constant">1</span>;
+				}
+				can_del[rez[i]] = !found;
+			}
+		}
+	}
+	<span class="Type">int</span> cnt = <span class="Constant">0</span>;
+	f(i, n) {
+		cnt += (rez[i] == -<span class="Constant">1</span>);
+	}
+	<span class="Statement">return</span> mp(cnt, can_del);
+}
+
+<span class="Type">signed</span> main(<span class="Type">signed</span> argc, <span class="Type">char</span> *argv[]) {
+	scan n, m;
+	vector&lt;pii&gt; edges, rev;
+	f(i, m) {
+		<span class="Type">int</span> a, b;
+		scan a, b;
+		a--;b--;
+		edges.emplace_back(a, b);
+		rev.emplace_back(b, a);
+	}
+	<span class="Type">auto</span> A = match(edges);
+	<span class="Type">auto</span> B = match(rev);
+	<span class="Type">int</span> y = min(A.x, B.x);
+	vector&lt;<span class="Type">int</span>&gt; free;
+	f(i, n) {
+		<span class="Statement">if</span> (A.y[i] || B.y[i]) {
+			free.pb(i + <span class="Constant">1</span>);
+		}
+	}
+	<span class="Statement">if</span> (y - <span class="Constant">1</span> == <span class="Constant">0</span>) {
+		print <span class="Constant">0</span>;
+	} <span class="Statement">else</span> {
+		print y - <span class="Constant">1</span>;
+		print free;
+	}
+}
+
+
+========== interpol ==========
+
+<span class="Type">template</span>&lt;<span class="Type">class</span> T&gt;
+vector&lt;T&gt; interpol(<span class="Type">const</span> vector&lt;pair&lt;T, T&gt;&gt; &amp;pts) {
+	<span class="Statement">if</span> (pts.empty()) <span class="Statement">return</span> {};
+	vector&lt;T&gt; holy;
+	vector&lt;T&gt; zero = {<span class="Constant">1</span>};
+	<span class="Type">auto</span> calc = [](vector&lt;T&gt; &amp;poly, <span class="Type">const</span> T &amp;x) {
+		T s = <span class="Constant">0</span>;
+		T p = <span class="Constant">1</span>;
+		f(j, len(poly)) {
+			s += poly[j] * p;
+			p *= x;
+		}
+		<span class="Statement">return</span> s;
+	};
+	holy.emplace_back(pts[<span class="Constant">0</span>].y);
+	<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">1</span>; i &lt; len(pts); i++) {
+		zero.insert(zero.begin(), <span class="Constant">0</span>);
+		f(j, len(zero) - <span class="Constant">1</span>) {
+			zero[j] -= zero[j + <span class="Constant">1</span>] * pts[i - <span class="Constant">1</span>].x;
+		}
+		T sub = pts[i].y - calc(holy, pts[i].x);
+		T coef = sub / calc(zero, pts[i].x);
+		<span class="Statement">while</span> (len(holy) &lt; len(zero)) {
+			holy.pb(<span class="Constant">0</span>);
+		}
+		<span class="Statement">for</span> (<span class="Type">int</span> j = <span class="Constant">0</span>; j &lt; len(zero); j++) {
+			holy[j] += zero[j] * coef;
+		}
+	}
+	<span class="Statement">return</span> holy;
+}
+
+========== Bridges ==========
+
+<span class="Type">const</span> <span class="Type">int</span> MAXN = ...;
+vector&lt;<span class="Type">int</span>&gt; g[MAXN];
+<span class="Type">bool</span> used[MAXN];
+<span class="Type">int</span> timer, tin[MAXN], fup[MAXN];
+
+<span class="Type">void</span> dfs (<span class="Type">int</span> v, <span class="Type">int</span> p = -<span class="Constant">1</span>) {
+	used[v] = <span class="Constant">true</span>;
+	tin[v] = fup[v] = timer++;
+	<span class="Statement">for</span> (<span class="Type">size_t</span> i=<span class="Constant">0</span>; i&lt;g[v].size(); ++i) {
+		<span class="Type">int</span> to = g[v][i];
+		<span class="Statement">if</span> (to == p)  <span class="Statement">continue</span>;
+		<span class="Statement">if</span> (used[to])
+			fup[v] = min (fup[v], tin[to]);
+		<span class="Statement">else</span> {
+			dfs (to, v);
+			fup[v] = min (fup[v], fup[to]);
+			<span class="Statement">if</span> (fup[to] &gt; tin[v])
+				IS_BRIDGE(v,to);
+		}
+	}
+}
+
+<span class="Type">void</span> find_bridges() {
+	timer = <span class="Constant">0</span>;
+	<span class="Statement">for</span> (<span class="Type">int</span> i=<span class="Constant">0</span>; i&lt;n; ++i)
+		used[i] = <span class="Constant">false</span>;
+	<span class="Statement">for</span> (<span class="Type">int</span> i=<span class="Constant">0</span>; i&lt;n; ++i)
+		<span class="Statement">if</span> (!used[i])
+			dfs (i);
+}
+
+========== CriticalPoints ==========
+
+vector&lt;<span class="Type">int</span>&gt; g[MAXN];
+<span class="Type">bool</span> used[MAXN];
+<span class="Type">int</span> timer, tin[MAXN], fup[MAXN];
+
+<span class="Type">void</span> dfs (<span class="Type">int</span> v, <span class="Type">int</span> p = -<span class="Constant">1</span>) {
+	used[v] = <span class="Constant">true</span>;
+	tin[v] = fup[v] = timer++;
+	<span class="Type">int</span> children = <span class="Constant">0</span>;
+	<span class="Statement">for</span> (<span class="Type">size_t</span> i=<span class="Constant">0</span>; i&lt;g[v].size(); ++i) {
+		<span class="Type">int</span> to = g[v][i];
+		<span class="Statement">if</span> (to == p)  <span class="Statement">continue</span>;
+		<span class="Statement">if</span> (used[to])
+			fup[v] = min (fup[v], tin[to]);
+		<span class="Statement">else</span> {
+			dfs (to, v);
+			fup[v] = min (fup[v], fup[to]);
+			<span class="Statement">if</span> (fup[to] &gt;= tin[v] &amp;&amp; p != -<span class="Constant">1</span>)
+				IS_CUTPOINT(v);
+			++children;
+		}
+	}
+	<span class="Statement">if</span> (p == -<span class="Constant">1</span> &amp;&amp; children &gt; <span class="Constant">1</span>)
+		IS_CUTPOINT(v);
+}
+
+<span class="Type">int</span> main() {
+	<span class="Type">int</span> n;
+	... чтение n и g ...
+
+	timer = <span class="Constant">0</span>;
+	<span class="Statement">for</span> (<span class="Type">int</span> i=<span class="Constant">0</span>; i&lt;n; ++i)
+		used[i] = <span class="Constant">false</span>;
+	dfs (<span class="Constant">0</span>);
+}
+
+========== determinant ==========
+
+<span class="Type">template</span>&lt;<span class="Type">class</span> T&gt;
+T det(vector&lt;vector&lt;T&gt;&gt; v) {
+	<span class="Type">int</span> n = len(v);
+	T d = <span class="Constant">1</span>;
+	<span class="Statement">for</span> (<span class="Type">int</span> i = <span class="Constant">0</span>; i &lt; n; i++) {
+		<span class="Statement">for</span> (<span class="Type">int</span> j = i + <span class="Constant">1</span>; j &lt; n; j++) {
+			<span class="Statement">if</span> (v[j][i] != T(<span class="Constant">0</span>)) {
+				swap(v[j], v[i]);
+				d *= -<span class="Constant">1</span>;
+				<span class="Statement">break</span>;
+			}
+		}
+		<span class="Statement">if</span> (v[i][i] == <span class="Constant">0</span>) <span class="Statement">return</span> (T)<span class="Constant">0</span>;
+		d *= v[i][i];
+		<span class="Statement">for</span> (<span class="Type">int</span> j = i + <span class="Constant">1</span>; j &lt; n; j++) {
+			num coef = v[j][i] / v[i][i];
+			<span class="Statement">for</span> (<span class="Type">int</span> k = i; k &lt; n; k++) {
+				v[j][k] -= (v[i][k] * coef);
+			}
+		}
+	}
+	<span class="Statement">return</span> d;
+}
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->
