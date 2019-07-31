@@ -57,6 +57,9 @@ struct Ring {
 	bool operator==(const Ring<MOD> &b) {
 		return value == b.value;
 	}
+	bool operator!=(const Ring<MOD> &b) {
+		return value != b.value;
+	}
 	friend void fast_print(const Ring<MOD> &b) {
 		fast_print(b.value);
 	}
