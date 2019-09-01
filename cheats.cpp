@@ -166,9 +166,24 @@ void fast_print(const int &x) { printf("%d", x); }
 void fast_print(const unsigned int &x) { printf("%u", x); }
 void fast_print(const long long &x) { printf("%lld", x); }
 void fast_print(const unsigned long long &x) { printf("%llu", x); }
+void fast_print(const char &x) { printf("%c", x); };
+void fast_print(__int128 x) {
+	if (x == 0) { fast_print('0'); return; }
+	if (x < 0) {
+		fast_print('-');
+		x = -x;
+	}
+	__int128 p = 1;
+	while (x / (p * 10)) p *= 10;
+	while (p) {
+		__int128 symb = x / p;
+		fast_print((int)symb);
+		x -= p * symb;
+		p /= 10;
+	}
+};
 void fast_print(const double &x) { printf("%.15lf", x); }
 void fast_print(const long double &x) { printf("%.15Lf", x); }
-void fast_print(const char &x) { printf("%c", x); };
 void fast_print(const string &x) { printf("%s", x.c_str());}
 void fast_print(const char v[]) { fast_print((string)v); }
 

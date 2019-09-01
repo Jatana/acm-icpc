@@ -271,26 +271,26 @@ using namespace numbers_operation;
 using namespace typedefs;
 
 
-vector<int> suffix_array(const string &s) {
-    int n = s.size(), N = max(n, 257);
-    vector<int> sa(n), ra(n);
-    for (int i = 0; i < n; i++) sa[i] = i, ra[i] = s[i];
-    for (int k = 0; k < n; k ? k <<= 1 : k++) {
-        vector<int> nsa(sa), nra(n), cnt(N);
-        for (int i = 0; i < n; ++i) nsa[i] -= k - (nsa[i] < k ? n : 0);
-        for (int i = 0; i < n; ++i) cnt[ra[i]]++;
-        for (int i = 1; i < N; ++i) cnt[i] += cnt[i - 1];
-        for (int i = n - 1; i >= 0; --i) sa[--cnt[ra[nsa[i]]]] = nsa[i];
-        int r = 0;
-        for (int i = 1; i < n; ++i) {
-            if (ra[sa[i]] != ra[sa[i - 1]]) r++;
-            else if (ra[(sa[i] + k) % n] != ra[(sa[i - 1] + k) % n]) r++;
-            nra[sa[i]] = r;
-        }
-        swap(ra, nra);
-    }
-    return sa;
-}
+// vector<int> suffix_array(const string &s) {
+//     int n = s.size(), N = max(n, 257);
+//     vector<int> sa(n), ra(n);
+//     for (int i = 0; i < n; i++) sa[i] = i, ra[i] = s[i];
+//     for (int k = 0; k < n; k ? k <<= 1 : k++) {
+//         vector<int> nsa(sa), nra(n), cnt(N);
+//         for (int i = 0; i < n; ++i) nsa[i] -= k - (nsa[i] < k ? n : 0);
+//         for (int i = 0; i < n; ++i) cnt[ra[i]]++;
+//         for (int i = 1; i < N; ++i) cnt[i] += cnt[i - 1];
+//         for (int i = n - 1; i >= 0; --i) sa[--cnt[ra[nsa[i]]]] = nsa[i];
+//         int r = 0;
+//         for (int i = 1; i < n; ++i) {
+//             if (ra[sa[i]] != ra[sa[i - 1]]) r++;
+//             else if (ra[(sa[i] + k) % n] != ra[(sa[i - 1] + k) % n]) r++;
+//             nra[sa[i]] = r;
+//         }
+//         swap(ra, nra);
+//     }
+//     return sa;
+// }
 
 const int N = 2e6 + 100;
 
@@ -300,7 +300,7 @@ int p[N];
 int c[N];
 int _newc[N];
 
-vector<int> suffix_array(const string &s) {
+tuple<vector<int>, vector<int>, vector<int>> suffix_array(const string &s) {
 	int n = len(s);
 
 	for (int i = 0; i < n; i++) {
@@ -318,14 +318,15 @@ vector<int> suffix_array(const string &s) {
 			c[p[i]]++;
 		}
 	}
-	for (int k = 1; k < (1 << 20); k *= 2) {
+	for (int k = 1; k < n; k *= 2) {
 		for (int i = 0; i < n; i++) {
-			p[i] = floor_mod(p[i] - k, n);
+			p[i] = p[i] - k;
+			p[i] = (p[i] < 0 ? p[i] + n: p[i]);
 		}
-		memset(cnt, 0, sizeof cnt);
+	 	fill(cnt, cnt + n, 0);
 		for (int i = 0; i < n; i++) {
 			cnt[c[i]]++;
-		}	
+		}   
 		for (int i = 1; i < n; i++) {
 			cnt[i] += cnt[i - 1];
 		}
@@ -337,17 +338,34 @@ vector<int> suffix_array(const string &s) {
 		_newc[p[0]] = 0;
 		for (int i = 1; i < n; i++) {
 			_newc[p[i]] = _newc[p[i - 1]];
-			if (c[p[i]] == c[p[i - 1]] && c[(p[i] + k) % n] == c[(p[i - 1] + k) % n]) {
+			if (c[p[i]] == c[p[i - 1]] && c[(p[i] + k >= n ? p[i] + k - n: p[i] + k)] == c[(p[i - 1] + k >= n ? p[i - 1] + k - n: p[i - 1] + k)]) {
 			} else {
 				_newc[p[i]]++;
 			}
 		}
 		memcpy(c, _newc, sizeof c);
+		if (c[p[n - 1]] == n - 1) break;
 	}
-	return vector<int>(p, p + n);
+	vector<int> lcp(n);
+	vector<int> where(n);
+	for (int i = 0; i < n; i++)
+		where[p[i]] = i;
+	int com = 0;
+	for (int i = 0; i < n; i++) {
+		int x = where[i];
+		if (x + 1 < n) {
+			while (i + com < n && p[x + 1] + com < n && s[i + com] == s[p[x + 1] + com]) {
+				com++;
+			}
+			lcp[where[i]] = com;
+		}
+		com = max(0, com - 1);
+	}
+	return mt(vector<int>(p, p + n), lcp, where);
 }
 
 signed main(signed argc, char *argv[]) {
-	vector<int> s = suffix_array("abccba");
+	vector<int> s = get<0>(suffix_array("abccba"));
+	print s;
 }
 
