@@ -61,6 +61,13 @@
 #pragma GCC optimize("unroll-loops")
 #endif
 
+#define hur(f, g) template<class c> int f(c a) {if (sizeof(c) == 8) return g##ll(a); else return g(a);}
+hur(popc, __builtin_popcount) hur(ctz, __builtin_ctz) hur(clz, __builtin_clz)
+
+/*
+	- place bitset modifications here
+*/
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -93,12 +100,8 @@
 #define x first
 #define y second
 #define pb push_back
-#define ppb pop_back
 #define mp make_pair
-#define umap unordered_map
-#define uset unordered_set
-#define elif else if
-#define len(v) ((int)v.size())
+#define le(v) ((int)v.size())
 #define f(i, n) for (int i = 0; i < (n); i++)
 #define rof(i, n) for (int i = ((n) - 1); i >= 0; i--)
 #define apply(v, act) for (auto &x : v) { act; }
@@ -167,21 +170,21 @@ void fast_print(const unsigned int &x) { printf("%u", x); }
 void fast_print(const long long &x) { printf("%lld", x); }
 void fast_print(const unsigned long long &x) { printf("%llu", x); }
 void fast_print(const char &x) { printf("%c", x); };
-void fast_print(__int128 x) {
-	if (x == 0) { fast_print('0'); return; }
-	if (x < 0) {
-		fast_print('-');
-		x = -x;
-	}
-	__int128 p = 1;
-	while (x / (p * 10)) p *= 10;
-	while (p) {
-		__int128 symb = x / p;
-		fast_print((int)symb);
-		x -= p * symb;
-		p /= 10;
-	}
-};
+// void fast_print(__int128 x) {
+// 	if (x == 0) { fast_print('0'); return; }
+// 	if (x < 0) {
+// 		fast_print('-');
+// 		x = -x;
+// 	}
+// 	__int128 p = 1;
+// 	while (x / (p * 10)) p *= 10;
+// 	while (p) {
+// 		__int128 symb = x / p;
+// 		fast_print((int)symb);
+// 		x -= p * symb;
+// 		p /= 10;
+// 	}
+// };
 void fast_print(const double &x) { printf("%.15lf", x); }
 void fast_print(const long double &x) { printf("%.15Lf", x); }
 void fast_print(const string &x) { printf("%s", x.c_str());}
@@ -288,10 +291,10 @@ namespace typedefs {
 
 namespace numbers_operation {
 	template<class T>
-	T floor_mod(T a, T b) {
-		if (a >= 0 && b >= 0) return a % b;
-		if (a <= 0 && b <= 0) return a % b;
-		return abs(b) - (abs(a) % abs(b));
+	inline T floor_mod(T a, const T &b) {
+		a %= b;	
+		if (a < 0) a += b;
+		return a;
 	}
 }
 
